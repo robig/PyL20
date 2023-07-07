@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>PyL20 Mixer</title>
+    <meta name="viewport" content="width=device-width, initial-scale=0.5">
+
+    <link rel="stylesheet" type="text/css" href="assets/css/main.css">
+    <link rel="stylesheet" type="text/css" href="assets/css/roundslider.min.css">
+	<script src="assets/js/jquery-3.4.1.min.js"></script>
+  </head>
+  <body>
+    
+	<div id="error_message" class="alert alert-danger" role="alert" style="display:none;"></div>
+	<div id="ok_message" class="alert alert-success" role="alert" style="display:none;"></div>
+
+	
+    <div id="mixer">
+        
+    </div>
+
+	<template id="track_tpl">
+        <div class="track">
+		    <div class="sig"></div>
+            <div class="eq"></div>
+            <div class="eq"></div>
+            <div class="indicator fx1"></div>
+            <div class="indicator fx2"></div>
+			<div class="indicator pan"></div>
+            <button class="button rec" title="REC/PLAY">REC/PLAY</button>
+			<button class="button mute" title="Mute track">MUTE</button>
+			<button class="button solo" title="Solo">SOLO</button>
+            <input type="range" orient="vertical" class="slider volume" />
+			<div class="meter" style="width: 12em; height: 3em;"></div>
+			<div class="name"></div>
+		</div>
+	</template>
+
+
+    
+	</div>
+
+    <!-- inserting these scripts at the end to be able to use all the elements in the DOM -->
+  	<script src="assets/js/binding.js"></script>
+  	<script src="assets/js/main.js"></script>
+  	
+  </body>
+</html>

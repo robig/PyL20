@@ -8,24 +8,104 @@
 }
 body {
 	width: 100%;
+	font-family: Arial, Helvetica, sans-serif;
+	background: black;
+	color: rgb(233, 233, 233);
+}
+button.button {
+	background: url('../img/button.png');
+	height: 30px;
+	width: 69px;
+	text-align: center;
+	position: relative;
+	font-size: 12px;
+	border: 0px;
+	cursor: pointer;
 }
 
+#topbar {
+	position: absolute;
+	top: 0px;
+	height: 18px;
+	width: 100%;
+	background: black;
+	padding-left: 20px;
+}
+body.closed #topbar #connection { color: yellow; }
+body.offline #topbar #connection { color: red; }
+body.connected #topbar #connection { color: green; }
+
+#track_container {
+	display: inline-block;
+}
+/************ MAIN SECTION *****************/
+#main {
+	display: inline-block;
+	width: 275px;
+	height: 699px;
+	background: url('../img/main.png');
+}
+#main .status {
+	position: absolute;
+	top: 30px;
+	left: 30px;
+}
+#main .groups {
+	position: absolute;
+	top: 312px;
+	width: 50px;
+	/*border: red solid 1px;*/
+}
+#main .groups .button {
+	height: 30px;
+	width: 42px;
+	text-align: center;
+	margin-left: 11px;
+	margin-bottom: 17px;
+	font-size: 12px;
+	border: 0px;
+}
+#main .groups .button.active {
+	background: url('../img/button_red.png');
+}
+
+/********** MASTER TRACK *************/
+#main .track {
+	position: relative;
+	left: 183px;
+	top: 225px;
+	background-position-y: -225px;
+	height: 425px;
+}
+.master.track .name { color: white; }
+.master.track .button.rec {
+	top: 8px;
+}
+.master.track .button.mute {
+	top: 30px;
+}
+.master.track .button.solo {
+	top: 51px;
+}
+.master.track .meter_slide {
+	top: 173px;
+}
+
+/************ TRACKS *************/
+.tab:not(.active) {
+	display: none;
+}
+.tab {
+	width: 100%;
+}
 
 .track {
 	background: url('../img/channel_strip.png');
-	border: red;
-	width: 93px;
+	width: 92px;
 	height: 648px;
 	margin-top: 50px;
 	display: inline-block;
 }
-
-.track input.volume {
-	position: relative;
-	top: 313px;
-	width: 78px;
-}
-
 .track .button {
 	background: url('../img/button.png');
 	height: 30px;
@@ -33,7 +113,7 @@ body {
 	text-align: center;
 	position: relative;
 	margin-left: 10px;
-	font-size: 15px;
+	font-size: 12px;
 	border: 0px;
 }
 .track .button.rec {
@@ -43,23 +123,49 @@ body {
 	top: 256px;
 }
 .track .button.solo {
-	top: 276px;
+	top: 275px;
+}
+.track .meter_slide {
+	position: absolute;
+	top: 430px;
+	width: 100%;
+}
+.track .slider {
+	display: inline-block;
+}
+.track .meter {
+	display: inline-block;
+	border: green solid 1px;
+	height: 214px;
+	width: 10px;
+}
+.track .value {
+	position: relative;
+	top: 1px;
+	left: 10px;
+	color: rgb(201, 201, 201);
+}
+.track .name {
+	width: 100%;
+	text-align: center;
+	position: relative;
+	top: 539px;
 }
 
 input[type=range][orient=vertical] {
     writing-mode: bt-lr; /* IE */
     -webkit-appearance: slider-vertical; /* Chromium */
-	height: 214px;
-	width: 78px;
     padding: 0 5px;
-	border: solid red 1px;
+	/*border: solid red 1px;*/
 }
 
 input[type=range].slider {
-	width: 100%;
-	margin: 0px 0;
+	width: 35px;
+	height: 214px;
+	margin: 0px 0px;
 	background-color: transparent;
 	-webkit-appearance: none;
+	padding-left: 25px;
   }
   input[type=range].slider:focus {
 	outline: none;
@@ -81,16 +187,19 @@ input[type=range].slider {
   input[type=range].slider::-moz-range-thumb {
 	width: 25px;
 	height: 47px;
-	background: url('../img/fader.png')
-
+	background: url('../img/fader.png');
+	border: 0px;
 	cursor: pointer;
+  }
+  .master input[type=range].slider::-moz-range-thumb {
+	background: url('../img/fader_main.png');
   }
   input[type=range].slider:focus::-webkit-slider-runnable-track {
 	background: #fffff0;
   }
   input[type=range].slider::-moz-range-track {
 	background: transparent;
-	border: 0;
+	border: 0px;
 	cursor: pointer;
   }
   

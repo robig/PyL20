@@ -1,5 +1,10 @@
 {
     "channels": {
         "count": 8
+    },
+    "groups": {
+        "count": 7,
+        "names": ["M", "A", "B", "C", "D", "E", "F"],
+        "startup": 0
     }
 }

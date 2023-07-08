@@ -8,23 +8,125 @@ jQuery.getJSON( "config.json", function( data ) {
 }
 );
 
+var track_data = [];
+var main_data = {"master": {"value": 0, "mute": 0, "solo": 0}}
+var ignore_incoming=[];
+var mouseDown=false;
+
 function onLoad(config) {
 	var channelCount = config.channels.count;
+	var groupCount = config.groups.count;
+	var groupNames = config.groups.names;
+	//var group=0; // todo 0=master group
 
-	var mixer = $('#mixer');
+	// create the track elements:
+	var mixer = $('#track_container');
 	var trackTemplate = $('template#track_tpl').html();
-	for(var i=0; i<channelCount; i++) {
-		var t = mixer.append(trackTemplate);
-		t.addClass("track"+(i+1));
+
+	var groups = $('#main .groups');
+	var groupTemplate = $('template#group_tpl').html();
+	for(var g=0; g<groupCount; g++) {
+		track_data[g]=[]; 
+		var grp = $(groupTemplate);
+		grp.appendTo(groups);
+		grp.text(groupNames[g]);
+		grp.attr("x-group", g); // groupID on element
+		grp.on("click", function() {
+			var gid = $(this).attr("x-group");
+			console.log("Activate group: #"+gid+" "+groupNames[gid]);
+			$("#main .groups .button").removeClass("active");
+			$(this).addClass("active");
+			$("#mixer .tab").removeClass("active");
+			$("#mixer .tab.group"+gid).addClass("active");
+		});
+
+		var tab = $("<div class='tab group"+g+"'></div>");
+		if(g==config.groups.startup) {
+			console.log("Active group: "+g);
+			$("body").addClass("activeGroup"+g);
+			grp.addClass("active");
+			tab.addClass("active");
+		}
+		tab.appendTo(mixer);
+
+		for(var i=0; i<channelCount; i++) {
+			
+			var t = $(trackTemplate);
+			t.appendTo(tab);
+			t.addClass("track"+(i+1));
+			t.find(".name").text("CH"+(i+1));
+
+			track_data[g][i] = {"name": "CH"+(i+1), "value": 0, "channel": i, "group": g, "mute": 0, "solo": 0};
+			
+			var b = new Binding({
+				object: track_data[g][i],
+				property: "value"
+			});
+			var elSlider = t.find(".slider")[0];
+			$(elSlider).attr("x-group", g);
+			$(elSlider).attr("x-track", i);
+			b.addBinding(elSlider, "value", "input");
+			elSlider.addEventListener("input", function() {
+				//console.log($(this));
+				var gid = $(this).attr("x-group");
+				var trk = $(this).attr("x-track");
+				const now = Date.now();
+				if((now - lastChange) > 100 ) { //DEbounce
+					lastChange = Date.now();
+					sendToServer({"context": "track", "value": track_data[gid][trk].value, "group": track_data[gid][trk].group, "channel": track_data[gid][trk].channel});
+					//sendToServer(track_data[gid][trk]);
+				}
+			});
+			$(elSlider).on('mousedown', function() {mouseDown=true;});
+			$(elSlider).on('mouseup', function() {
+				mouseDown=false;
+				var gid = $(this).attr("x-group");
+				var trk = $(this).attr("x-track");
+				sendToServer({"context": "track", "value": track_data[gid][trk].value, "group": track_data[gid][trk].group, "channel": track_data[gid][trk].channel});
+			});
+
+			var elValue= t.find(".value")[0];
+			b.addBinding(elValue, "innerHTML");
+			//console.log("Binding setup"+i);
+		}
 	}
 
+	// create master track binding:
+	var t = $(".master.track");
+	var b = new Binding({
+		object: main_data.master,
+		property: "value"
+	});
+	var elSlider = t.find(".slider")[0];
+	b.addBinding(elSlider, "value", "input");
+	var elValue= t.find(".value")[0];
+	b.addBinding(elValue, "innerHTML");
+
+	// connect to ws server:
 	connect();
 }
 
+var lastChange = 0;
+var lastSent = null;
+function sendToServer(data) {
+	try {
+		console.log("Send to server:", data);
+		socket.send(JSON.stringify(data));
+		lastSent = data;
+	} catch (error) {
+		console.error("Sending Failed!", error);
+	}
+}
+
+var sending = false;
 var socket = null;
 function connect() {
 	socket = new WebSocket('ws://localhost:5000');
 	socket.addEventListener('open', function (event) {
+		$('#connection').text("connected");
+		$('body').addClass("connected");
+		$('body').removeClass("offline");
+		$('body').removeClass("closed");
 	    socket.send('Hi!');
 	});
 	 
@@ -33,23 +135,53 @@ function connect() {
 		var json = JSON.parse(event.data)
 		if(json.command) {
 			parseIncomingCommand(json.command);
+		}else if(json.status) {
+			updateStatus(json.status);
 		}
 	});
 	 
 	socket.onclose = function(e) {
+		$('#connection').text("connection closed");
+		$('body').addClass("closed");
+		$('body').removeClass("connected");
+		$('body').removeClass("offline");
 		console.log('Socket is closed. Reconnect will be attempted in 1 second.', e.reason);
 		setTimeout(function() {
 			connect();
 		}, 1000);
 	};
 	socket.onerror = function(err) {
+		$('#connection').text("connection failed");
+		$('body').removeClass("connected");
+		$('body').addClass("offline");
+		$('body').removeClass("closed");
 		console.error('Socket encountered error: ', err.message, 'Closing socket');
 		socket.close();
 	};
 }
 
 function parseIncomingCommand(cmd) {
-	if(cmd.function == "volume") console.log("Volume: "+cmd.value);
+	console.log(mouseDown);
+	if(cmd.context=="track" && cmd.function == "volume" && !mouseDown) {
+		console.log("TrackVolume on group:"+cmd.group);
+		if(cmd.group >= 0 && cmd.group < track_data.length) {
+			var g = cmd.group;
+			for(var i=0; i<track_data[g].length; i++) {
+				var t=track_data[g][i];
+				if(t.channel == cmd.channel && t.group == cmd.group) {
+					t.value = cmd.value;
+					console.log("Volume: "+cmd.value);
+				}
+			}
+		}
+	}
+	if(cmd.context=="main" && cmd.function == "volume") {
+		main_data.master.value = cmd.value;
+	}
+}
+
+function updateStatus(status) {
+	$('#main .status').text(status);
 }
 
 $(window).keypress(function (e) {
@@ -59,209 +191,7 @@ $(window).keypress(function (e) {
     console.log('Space pressed');
 	socket.send("SPACE");
   }
-})
-function startRecording() {
-	console.log("recordButton clicked");
-	playTake();
- 	/*
-    	Disable the record button until we get a success or fail from getUserMedia() 
-	*/
-
-	recording=true;
-	recordButton.disabled = true;
-	stopButton.disabled = true;
-	pauseButton.disabled = true
-	playButton.disabled = true;
-            
-	vocals = null;
-	module.sync('record', backingInstance, null, function(ret) {
-		console.log("Sync recording started:", ret);
-		document.getElementById("formats").innerHTML="Recording: 1 channel pcm @ "+ret.sampleRate/1000+"kHz"
-		recordButton.disabled = true;
-		stopButton.disabled = false;
-		//pauseButton.disabled = false
-		playButton.disabled = true;
-	});
-
-}
-
-function pauseRecording(){
-	console.log("pauseButton clicked rec.recording=",rec.recording );
-	if (rec.recording){
-		//pause
-		if(rec && recording) rec.stop();
-		sample.pause();
-		pauseButton.innerHTML="Resume";
-	}else{
-		//resume
-		if(rec && recording) rec.record()
-		sample.play();
-		pauseButton.innerHTML="Pause";
-	}
-}
-
-function stopRecording() {
-	console.log("stopButton clicked");
-    module.stop(backingInstance);
-	playing=false;
-
-	//disable the stop button, enable the record too allow for new recordings
-	stopButton.disabled = true;
-	recordButton.disabled = false;
-	pauseButton.disabled = true;
-	playButton.disabled = false;
-	playSyncButton.disabled=false;
-
-	//reset button just in case the recording is stopped while paused
-	pauseButton.innerHTML="Pause";
-
-	if(!recording) return;
-	//tell the recorder to stop the recording
-	recording=false;
-	module.recordStop(function(buffers) {
-		// calculate filled version for looping playback
-		vocalsBuffers = buffers;
-		vocalsRecording = module.createBuffer(vocalsBuffers, 2);
-		vocalsOffset = module.getOffset(vocalsRecording, backingOriginal, offset);
-		vocals = module.offsetBuffer(vocalsBuffers, vocalsOffset.before, vocalsOffset.after);
-
-		document.getElementById("formats").innerHTML="Recording stopped. "+vocals.duration;
-		module.recorder.exportWAV(createDownloadLink);
-	});
-
-	//stop microphone access
-	//gumStream.getAudioTracks()[0].stop();
-
-	//create the wav blob and pass it on to createDownloadLink
-	//rec.exportWAV(createDownloadLink);
-	
-}
-
-function playTake() {
-	playing=true;
-	backingInstance = module.play(backing);
-	backingOriginal = backingInstance;
-
-	stopButton.disabled=false;
-	playButton.disabled=true;
-	recordButton.disabled=true;
-}
-
-function playSync() {
-	playingSync=true;	
-	module.sync('play', backingInstance, vocals, function (data) {
-		vocalsInstance = data;
-	});
-}
-
-var debug=null;
-function createDownloadLink(blob) {
-	
-	var url = URL.createObjectURL(blob);
-	var au = document.createElement('audio');
-	var li = document.createElement('li');
-	var link = document.createElement('a');
-
-	//name of .wav file to use during upload and download (without extendion)
-	var filename = new Date().toISOString()+"_"+recorderName+".wav";
-
-	//add controls to the <audio> element
-	au.controls = true;
-	au.src = url;
-
-	//save to disk link
-	link.href = url;
-	link.download = filename; //download forces the browser to donwload the file using the  filename
-	link.innerHTML = "Download";
-
-	//add the new audio element to li
-	li.appendChild(au);
-	
-	//add the filename to the li
-	li.appendChild(document.createTextNode(filename))
-
-	//add the save to disk link to li
-	li.appendChild(link);
-	
-	//upload link
-	var upload = document.createElement('a');
-	upload.href="#";
-	upload.innerHTML = "Upload";
-	upload.addEventListener("click", function(event){
-		upload(blob, filename);
-	});
-	if(uploadDirectly)
-		upload(blob, filename);
-	else {
-		li.appendChild(document.createTextNode (" "))//add a space in between
-		li.appendChild(upload)//add the upload link to li
-	}
-	
-
-	var del = document.createElement("a");
-	del.href="#";
-	del.innerHTML="Löschen";
-	del.addEventListener("click", function(event){
-		$(event.srcElement).closest('li').remove();
-	});
-	li.appendChild(document.createTextNode (" "))//add a space in between
-	li.appendChild(del);
-
-	var play = document.createElement("a");
-	play.href="#";
-	play.innerHTML="Play L/R";
-	play.addEventListener("click", function(event){
-		if(recording || playing) stopRecording();
-		merge(); return;
-		var li=$(event.srcElement).closest('li');
-		var pl=$(li).find('audio')[0];
-		//merge(pl); return;
-		console.log(pl);
-		sample.currentTime=0;
-		pl.currentTime=0;
-		sample.play();
-		pl.volume=0;
-		pl.play();
-		stopButton.disabled=false;
-    	recordButton.disabled = true;
-		playButton.disabled=true;
-		setTimeout(function() {
-			pl.currentTime=sample.currentTime;
-			pl.volume=1;
-		},250);
-	});
-	li.appendChild(document.createTextNode (" "))//add a space in between
-	li.appendChild(play);
-
-	//add the li element to the ol
-	recordingsList.appendChild(li);
-}
-
-function upload(blob, filename) {
-	var xhr=new XMLHttpRequest();
-	xhr.onload=function(e) {
-	  console.log("Server returned: ",e.target.responseText);
-	  if(this.statue!== 200) {
-		  error_message("Upload Fehler! Server returned: ",e.target.responseText);
-	  }
-	  else {
-		  $(upload).hide();
-		ok_message("Upload erfolgreich");
-	  }
-	};
-	var fd=new FormData();
-	fd.append("audio_data",blob, filename);
-	xhr.open("POST","upload.php",true);
-	xhr.send(fd);
-}
-
-function changeVolume(el) {
-  var volume = element.value;
-  var fraction = parseInt(element.value) / parseInt(element.max);
-  // Let's use an x*x curve (x-squared) since simple linear (x) does not
-  // sound as good.
-  module.gainNode.gain.value = fraction * fraction;
-}
+});
 
 function ok_message(txt) {
 	$('#formats').innerText=txt;

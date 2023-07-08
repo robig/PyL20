@@ -13,11 +13,36 @@
     
 	<div id="error_message" class="alert alert-danger" role="alert" style="display:none;"></div>
 	<div id="ok_message" class="alert alert-success" role="alert" style="display:none;"></div>
-
+    <div id="topbar">
+        <div id="connection"></div>
+    </div>
 	
     <div id="mixer">
-        
+        <div id="track_container"></div>
+
+        <div id="main">
+            <div class="status"></div>
+
+            <div class="monitor"></div>
+            <div class="groups"></div>
+            <div class="scenes"></div>
+            <div class="master track">
+                <button class="button rec" title="REC/PLAY">REC/PLAY</button>
+                <button class="button mute" title="Mute track">MUTE</button>
+                <button class="button solo" title="Solo">SOLO</button>
+                <div class="meter_slide">
+                    <div class="value"></div>
+                    <input type="range" orient="vertical" class="slider volume" max="120" />
+                    <div class="meter"></div>
+                </div>
+                <div class="name">MASTER</div>
+            </div>
+        </div>
     </div>
+
+    <template id="group_tpl">
+        <button class="group button"></button>
+    </template>
 
 	<template id="track_tpl">
         <div class="track">
@@ -30,8 +55,11 @@
             <button class="button rec" title="REC/PLAY">REC/PLAY</button>
 			<button class="button mute" title="Mute track">MUTE</button>
 			<button class="button solo" title="Solo">SOLO</button>
-            <input type="range" orient="vertical" class="slider volume" />
-			<div class="meter" style="width: 12em; height: 3em;"></div>
+            <div class="meter_slide">
+                <div class="value"></div>
+                <input type="range" orient="vertical" class="slider volume" max="120" />
+			    <div class="meter"></div>
+            </div>
 			<div class="name"></div>
 		</div>
 	</template>

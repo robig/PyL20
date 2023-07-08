@@ -5,28 +5,40 @@ function Binding(b) {
 	if(!this.values) this.values={};
     this.value = b.object[b.property]
     this.valueGetter = function(){
-
         return _this.value;
     }
+    this.blocked=false;
     this.valueSetter = function(val){
         _this.value = val;
         for (var i = 0; i < _this.elementBindings.length; i++) {
             var binding=_this.elementBindings[i]
-            binding.element[binding.attribute] = val
+            if(binding) {
+                binding.element[binding.attribute] = val
+            }
         }
     }
     this.addBinding = function(element, attribute, event){
+        if(!element) return _this;
         var binding = {
             element: element,
             attribute: attribute
-        }
+        };
         if (event){
             element.addEventListener(event, function(event){
                 _this.valueSetter(element[attribute]);
-            })
-            binding.event = event
-        }       
-        this.elementBindings.push(binding);
+            });
+            //needed? 
+            //binding.event = event
+
+            
+            element.addEventListener("mousedown", function(event){
+                _this.blocked = true;
+            });
+            element.addEventListener("mouseup", function(event){
+                _this.blocked = false;
+            });
+        }
+        _this.elementBindings.push(binding);
         element[attribute] = _this.value;
         return _this;
     }

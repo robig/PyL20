@@ -1,0 +1,154 @@
+2023-07-09 15:53:05,392 INFO     Connected: True
+2023-07-09 15:53:05,446 INFO     Model Number: L-20
+2023-07-09 15:53:05,446 INFO     [Service] 03b80e5a-ede8-4b33-a751-6ce34ec4c700 (Handle: 16): Unknown
+2023-07-09 15:53:05,507 INFO       [Characteristic] 7772e5db-3868-4112-a1a9-f2669d106bf3 (Handle: 17): Unknown (read,write-without-response,notify), Value: bytearray(b'')
+2023-07-09 15:53:05,566 ERROR        [Descriptor] 00002902-0000-1000-8000-00805f9b34fb (Handle: 19): Client Characteristic Configuration, Error: cannot convert 'NoneType' object to bytearray
+2023-07-09 15:53:05,628 INFO         [Descriptor] 00002901-0000-1000-8000-00805f9b34fb (Handle: 20): Characteristic User Description, Value: bytearray(b'MIDI I/O')
+2023-07-09 15:53:05,686 INFO         [Descriptor] 00002901-0000-1000-8000-00805f9b34fb (Handle: 21): Characteristic User Description, Value: bytearray(b'MIDI I/O')
+2023-07-09 15:53:05,686 INFO     [Service] 0000180a-0000-1000-8000-00805f9b34fb (Handle: 29): Device Information
+2023-07-09 15:53:05,746 INFO       [Characteristic] 00002a29-0000-1000-8000-00805f9b34fb (Handle: 30): Manufacturer Name String (read), Value: bytearray(b'ZOOM')
+2023-07-09 15:53:05,837 INFO       [Characteristic] 00002a24-0000-1000-8000-00805f9b34fb (Handle: 32): Model Number String (read), Value: bytearray(b'L-20')
+2023-07-09 15:53:05,896 INFO       [Characteristic] 00002a26-0000-1000-8000-00805f9b34fb (Handle: 34): Firmware Revision String (read), Value: bytearray(b'1.00')
+2023-07-09 15:53:05,956 INFO       [Characteristic] 00002a28-0000-1000-8000-00805f9b34fb (Handle: 36): Software Revision String (read), Value: bytearray(b'1.00')
+
+
+Jul 09 14:44:19.071  ATT Receive      0x0041  00:00:00:00:00:00  Handle Value Notification - Handle:0x0012 - Value: BF00 0000 0000 0000 0000 0000 0000 0500…  
+
+
+	00000000: 1B12 00BF 0000 0000 0000 0000 0000 0000  ................
+	00000010: 0005 0000 0000 00                        .......
+
+
+
+
+
+
+
+SysEx messages: ( Start with (8080)F0, must end with F7 )
+==========================================================
+
+* Color tracks
+8080 F052 0000 3103 0206 80F7
+-> changes CH2 to color blue (06)
+
+* Name tracks
+#00000000: 5212 0080 80F0 5200 0031 0202 0900 4566  R.....R..1....Ef
+#00000010: 6665 6374 7300 00                        fects..
+\x80\x80\xf0\x52\x00\x00\x31\x02\x02\x09\x00" + b"\x45\x45\x45\x65\x63\x74\x73\x00\x00\xf7
+
+
+
+* On iPad Initialization:
+<- 8080 F07E 0006 0180 F7
+-> hex: 0x92 0xc8 0xf0 0x7e 0x0 0x6 0x2 0x52 0x72 0x0 0x3 0x0 0x31 0x2e 0x31 0x34 0xc9 0xf7
+
+2. a lot of SysEx response: - must be Names (and Colors?)
+<- 8080 F052 0000 2B80 F7
+2023-07-09 19:37:39,082 INFO     Received: 7772e5db-3868-4112-a1a9-f2669d106bf3 (Handle: 17): Unknown: bytearray(b'\x8f\xe4\xf0R\x00\x00*\x08\x05\x01\x00CH1\x00\x00\x00\x00\x00\x00')
+2023-07-09 19:37:39,082 INFO       hex: 0x8f 0xe4 0xf0 0x52 0x0 0x0 0x2a 0x8 0x5 0x1 0x0 0x43 0x48 0x31 0x0 0x0 0x0 0x0 0x0 0x0
+2023-07-09 19:37:39,082 ERROR    <class 'ValueError'>
+2023-07-09 19:37:39,083 INFO     Received: 7772e5db-3868-4112-a1a9-f2669d106bf3 (Handle: 17): Unknown: bytearray(b'\x8fEEEects\x00\x00CH3\x00\x00\x00\x00\x00\x00C')
+2023-07-09 19:37:39,083 INFO       hex: 0x8f 0x45 0x45 0x45 0x65 0x63 0x74 0x73 0x0 0x0 0x43 0x48 0x33 0x0 0x0 0x0 0x0 0x0 0x0 0x43
+2023-07-09 19:37:39,083 ERROR    <class 'ValueError'>
+2023-07-09 19:37:39,084 INFO     Received: 7772e5db-3868-4112-a1a9-f2669d106bf3 (Handle: 17): Unknown: bytearray(b'\x8fH4\x00\x00\x00\x00\x00\x00CH5\x00\x00\x00\x00\x00\x00CH')
+2023-07-09 19:37:39,084 INFO       hex: 0x8f 0x48 0x34 0x0 0x0 0x0 0x0 0x0 0x0 0x43 0x48 0x35 0x0 0x0 0x0 0x0 0x0 0x0 0x43 0x48
+2023-07-09 19:37:39,084 ERROR    <class 'ValueError'>
+2023-07-09 19:37:39,084 INFO     Received: 7772e5db-3868-4112-a1a9-f2669d106bf3 (Handle: 17): Unknown: bytearray(b'\x8f6\x00\x00\x00\x00\x00\x00CH7\x00\x00\x00\x00\x00\x00CH8')
+2023-07-09 19:37:39,084 INFO       hex: 0x8f 0x36 0x0 0x0 0x0 0x0 0x0 0x0 0x43 0x48 0x37 0x0 0x0 0x0 0x0 0x0 0x0 0x43 0x48 0x38
+2023-07-09 19:37:39,084 ERROR    <class 'ValueError'>
+2023-07-09 19:37:39,086 INFO     Received: 7772e5db-3868-4112-a1a9-f2669d106bf3 (Handle: 17): Unknown: bytearray(b'\x8f\x00\x00\x00\x00\x00\x00CH9\x00\x00\x00\x00\x00\x00CH10')
+2023-07-09 19:37:39,086 INFO       hex: 0x8f 0x0 0x0 0x0 0x0 0x0 0x0 0x43 0x48 0x39 0x0 0x0 0x0 0x0 0x0 0x0 0x43 0x48 0x31 0x30
+2023-07-09 19:37:39,086 ERROR    <class 'ValueError'>
+2023-07-09 19:37:39,086 INFO     Received: 7772e5db-3868-4112-a1a9-f2669d106bf3 (Handle: 17): Unknown: bytearray(b'\x8f\x00\x00\x00\x00\x00CH11\x00\x00\x00\x00\x00CH12\x00')
+2023-07-09 19:37:39,086 INFO       hex: 0x8f 0x0 0x0 0x0 0x0 0x0 0x43 0x48 0x31 0x31 0x0 0x0 0x0 0x0 0x0 0x43 0x48 0x31 0x32 0x0
+2023-07-09 19:37:39,086 ERROR    <class 'ValueError'>
+2023-07-09 19:37:39,086 INFO     Received: 7772e5db-3868-4112-a1a9-f2669d106bf3 (Handle: 17): Unknown: bytearray(b'\x8f\x00\x00\x00\x00CH13\x00\x00\x00\x00\x00CH14\x00\x00')
+2023-07-09 19:37:39,086 INFO       hex: 0x8f 0x0 0x0 0x0 0x0 0x43 0x48 0x31 0x33 0x0 0x0 0x0 0x0 0x0 0x43 0x48 0x31 0x34 0x0 0x0
+2023-07-09 19:37:39,087 ERROR    <class 'ValueError'>
+2023-07-09 19:37:39,087 INFO     Received: 7772e5db-3868-4112-a1a9-f2669d106bf3 (Handle: 17): Unknown: bytearray(b'\x8f\x00\x00\x00CH15\x00\x00\x00\x00\x00CH16\x00\x00\x00')
+2023-07-09 19:37:39,087 INFO       hex: 0x8f 0x0 0x0 0x0 0x43 0x48 0x31 0x35 0x0 0x0 0x0 0x0 0x0 0x43 0x48 0x31 0x36 0x0 0x0 0x0
+2023-07-09 19:37:39,087 ERROR    <class 'ValueError'>
+2023-07-09 19:37:39,088 INFO     Received: 7772e5db-3868-4112-a1a9-f2669d106bf3 (Handle: 17): Unknown: bytearray(b'\x8f\x00\x00CH17_18\x00\x00CH19_20\x00')
+2023-07-09 19:37:39,088 INFO       hex: 0x8f 0x0 0x0 0x43 0x48 0x31 0x37 0x5f 0x31 0x38 0x0 0x0 0x43 0x48 0x31 0x39 0x5f 0x32 0x30 0x0
+2023-07-09 19:37:39,088 ERROR    <class 'ValueError'>
+# Colors????
+2023-07-09 19:37:39,088 INFO     Received: 7772e5db-3868-4112-a1a9-f2669d106bf3 (Handle: 17): Unknown: bytearray(b'\x8f\x00\x00\x06\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00')
+2023-07-09 19:37:39,088 INFO       hex: 0x8f 0x0 0x0 0x6 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0
+2023-07-09 19:37:39,088 ERROR    <class 'ValueError'>
+2023-07-09 19:37:39,113 INFO     Received: 7772e5db-3868-4112-a1a9-f2669d106bf3 (Handle: 17): Unknown: bytearray(b'\x8f\x02\x00\x02\x02\x01\x01\x01\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x01\x00')
+2023-07-09 19:37:39,113 INFO       hex: 0x8f 0x2 0x0 0x2 0x2 0x1 0x1 0x1 0x1 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x1 0x0
+2023-07-09 19:37:39,113 ERROR    <class 'ValueError'>
+2023-07-09 19:37:39,113 INFO     Received: 7772e5db-3868-4112-a1a9-f2669d106bf3 (Handle: 17): Unknown: bytearray(b'\x8f\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00')
+2023-07-09 19:37:39,113 INFO       hex: 0x8f 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0
+2023-07-09 19:37:39,113 ERROR    <class 'ValueError'>
+2023-07-09 19:37:39,113 INFO     Received: 7772e5db-3868-4112-a1a9-f2669d106bf3 (Handle: 17): Unknown: bytearray(b'\x8f\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00')
+2023-07-09 19:37:39,113 INFO       hex: 0x8f 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0
+2023-07-09 19:37:39,113 ERROR    <class 'ValueError'>
+2023-07-09 19:37:39,114 INFO     Received: 7772e5db-3868-4112-a1a9-f2669d106bf3 (Handle: 17): Unknown: bytearray(b'\x8f\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x002222')
+2023-07-09 19:37:39,114 INFO       hex: 0x8f 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x32 0x32 0x32 0x32
+2023-07-09 19:37:39,114 ERROR    <class 'ValueError'>
+2023-07-09 19:37:39,114 INFO     Received: 7772e5db-3868-4112-a1a9-f2669d106bf3 (Handle: 17): Unknown: bytearray(b'\x8f22222222222222\x00\x00\x00\x00\x00')
+2023-07-09 19:37:39,114 INFO       hex: 0x8f 0x32 0x32 0x32 0x32 0x32 0x32 0x32 0x32 0x32 0x32 0x32 0x32 0x32 0x32 0x0 0x0 0x0 0x0 0x0
+2023-07-09 19:37:39,114 ERROR    <class 'ValueError'>
+2023-07-09 19:37:39,115 INFO     Received: 7772e5db-3868-4112-a1a9-f2669d106bf3 (Handle: 17): Unknown: bytearray(b'\x8f\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x1e\x1e\x1e\x1e\x1e\x1e')
+2023-07-09 19:37:39,115 INFO       hex: 0x8f 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x1e 0x1e 0x1e 0x1e 0x1e 0x1e
+2023-07-09 19:37:39,116 ERROR    <class 'ValueError'>
+2023-07-09 19:37:39,116 INFO     Received: 7772e5db-3868-4112-a1a9-f2669d106bf3 (Handle: 17): Unknown: bytearray(b'\x8f\x1e \x1e\x1e\x1e\x1e\x1e\x1e\x19\x18\x1e\x1e0000000')
+2023-07-09 19:37:39,116 INFO       hex: 0x8f 0x1e 0x20 0x1e 0x1e 0x1e 0x1e 0x1e 0x1e 0x19 0x18 0x1e 0x1e 0x30 0x30 0x30 0x30 0x30 0x30 0x30
+2023-07-09 19:37:39,116 ERROR    <class 'ValueError'>
+2023-07-09 19:37:39,117 INFO     Received: 7772e5db-3868-4112-a1a9-f2669d106bf3 (Handle: 17): Unknown: bytearray(b'\x9000000000000\x1e\x1e\x1e\x1e\x1e\x1e\x1e\x1e')
+2023-07-09 19:37:39,117 INFO       hex: 0x90 0x30 0x30 0x30 0x30 0x30 0x30 0x30 0x30 0x30 0x30 0x30 0x1e 0x1e 0x1e 0x1e 0x1e 0x1e 0x1e 0x1e
+2023-07-09 19:37:39,117 ERROR    <class 'ValueError'>
+2023-07-09 19:37:39,117 INFO     Received: 7772e5db-3868-4112-a1a9-f2669d106bf3 (Handle: 17): Unknown: bytearray(b'\x90\x1e\x1e\x1e\x1e\x1e\x1e\x1e\x1e\x1e\x1e\x1e\x1e\x1e\x1e\x1e\x1e\x1e\x1e\x1e')
+2023-07-09 19:37:39,117 INFO       hex: 0x90 0x1e 0x1e 0x1e 0x1e 0x1e 0x1e 0x1e 0x1e 0x1e 0x1e 0x1e 0x1e 0x1e 0x1e 0x1e 0x1e 0x1e 0x1e 0x1e
+2023-07-09 19:37:39,117 ERROR    <class 'ValueError'>
+2023-07-09 19:37:39,118 INFO     Received: 7772e5db-3868-4112-a1a9-f2669d106bf3 (Handle: 17): Unknown: bytearray(b'\x90\x1e\x1e\x1e\x1e\x1e\x1e\x1e\x1e\x1e\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00')
+2023-07-09 19:37:39,118 INFO       hex: 0x90 0x1e 0x1e 0x1e 0x1e 0x1e 0x1e 0x1e 0x1e 0x1e 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0
+2023-07-09 19:37:39,118 ERROR    <class 'ValueError'>
+2023-07-09 19:37:39,143 INFO     Received: 7772e5db-3868-4112-a1a9-f2669d106bf3 (Handle: 17): Unknown: bytearray(b'\x90\x00\x00\x00\x00\x00\x00\x00\x00\x00\x1e\x00\x00\x00\x00\x00\x1e\x00\x00\x00')
+2023-07-09 19:37:39,143 INFO       hex: 0x90 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x1e 0x0 0x0 0x0 0x0 0x0 0x1e 0x0 0x0 0x0
+2023-07-09 19:37:39,143 ERROR    <class 'ValueError'>
+2023-07-09 19:37:39,143 INFO     Received: 7772e5db-3868-4112-a1a9-f2669d106bf3 (Handle: 17): Unknown: bytearray(b'\x90\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00<\x00\x00\x00\x00')
+2023-07-09 19:37:39,143 INFO       hex: 0x90 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x3c 0x0 0x0 0x0 0x0
+2023-07-09 19:37:39,143 ERROR    <class 'ValueError'>
+2023-07-09 19:37:39,143 INFO     Received: 7772e5db-3868-4112-a1a9-f2669d106bf3 (Handle: 17): Unknown: bytearray(b'\x90\x00\x00\x00\x00\x00\x00q\x00I\x00\x00\x00\x00\x01\x00\x00\x00\x00\x00')
+2023-07-09 19:37:39,143 INFO       hex: 0x90 0x0 0x0 0x0 0x0 0x0 0x0 0x71 0x0 0x49 0x0 0x0 0x0 0x0 0x1 0x0 0x0 0x0 0x0 0x0
+2023-07-09 19:37:39,143 ERROR    <class 'ValueError'>
+2023-07-09 19:37:39,143 INFO     Received: 7772e5db-3868-4112-a1a9-f2669d106bf3 (Handle: 17): Unknown: bytearray(b'\x90\x00\x00\x00R\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00')
+2023-07-09 19:37:39,143 INFO       hex: 0x90 0x0 0x0 0x0 0x52 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0
+2023-07-09 19:37:39,143 ERROR    <class 'ValueError'>
+2023-07-09 19:37:39,144 INFO     Received: 7772e5db-3868-4112-a1a9-f2669d106bf3 (Handle: 17): Unknown: bytearray(b'\x90\x00\x00S\x00\x00\x00\x00CE\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00')
+2023-07-09 19:37:39,144 INFO       hex: 0x90 0x0 0x0 0x53 0x0 0x0 0x0 0x0 0x43 0x45 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0
+2023-07-09 19:37:39,144 ERROR    <class 'ValueError'>
+2023-07-09 19:37:39,145 INFO     Received: 7772e5db-3868-4112-a1a9-f2669d106bf3 (Handle: 17): Unknown: bytearray(b'\x90\x00\x00\x00\x00\x00\x00DF\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00')
+2023-07-09 19:37:39,145 INFO       hex: 0x90 0x0 0x0 0x0 0x0 0x0 0x0 0x44 0x46 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0
+2023-07-09 19:37:39,145 ERROR    <class 'ValueError'>
+2023-07-09 19:37:39,146 INFO     Received: 7772e5db-3868-4112-a1a9-f2669d106bf3 (Handle: 17): Unknown: bytearray(b'\x90\x00\x00\x00\x00\x00HH\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00')
+2023-07-09 19:37:39,146 INFO       hex: 0x90 0x0 0x0 0x0 0x0 0x0 0x48 0x48 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0
+2023-07-09 19:37:39,146 ERROR    <class 'ValueError'>
+2023-07-09 19:37:39,146 INFO     Received: 7772e5db-3868-4112-a1a9-f2669d106bf3 (Handle: 17): Unknown: bytearray(b'\x90\x00\x00\x00\x00=?\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00')
+2023-07-09 19:37:39,146 INFO       hex: 0x90 0x0 0x0 0x0 0x0 0x3d 0x3f 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0
+2023-07-09 19:37:39,146 ERROR    <class 'ValueError'>
+2023-07-09 19:37:39,147 INFO     Received: 7772e5db-3868-4112-a1a9-f2669d106bf3 (Handle: 17): Unknown: bytearray(b'\x90\x00\x00\x0098\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00')
+2023-07-09 19:37:39,147 INFO       hex: 0x90 0x0 0x0 0x0 0x39 0x38 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0
+2023-07-09 19:37:39,147 ERROR    <class 'ValueError'>
+2023-07-09 19:37:39,147 INFO     Received: 7772e5db-3868-4112-a1a9-f2669d106bf3 (Handle: 17): Unknown: bytearray(b'\x90\x00\x002\x002\x002\x00\x11\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00')
+2023-07-09 19:37:39,147 INFO       hex: 0x90 0x0 0x0 0x32 0x0 0x32 0x0 0x32 0x0 0x11 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0
+2023-07-09 19:37:39,147 ERROR    <class 'ValueError'>
+2023-07-09 19:37:39,202 INFO     Received: 7772e5db-3868-4112-a1a9-f2669d106bf3 (Handle: 17): Unknown: bytearray(b"\x90\x00\x00\x00\x00\x00\x00\x00\x00\x01\x00d\x00<\x00\x00\x1f\'\x00\x1e")
+2023-07-09 19:37:39,202 INFO       hex: 0x90 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x1 0x0 0x64 0x0 0x3c 0x0 0x0 0x1f 0x27 0x0 0x1e
+2023-07-09 19:37:39,202 ERROR    <class 'ValueError'>
+2023-07-09 19:37:39,202 INFO     Received: 7772e5db-3868-4112-a1a9-f2669d106bf3 (Handle: 17): Unknown: bytearray(b'\x90\x1e\x1e\x1e\x1e\x1e\x1e\x1e\x1e\x1e\x1e\x1e\x1e\x1e\x1e\x01\x00\x00\x00\x00')
+2023-07-09 19:37:39,203 INFO       hex: 0x90 0x1e 0x1e 0x1e 0x1e 0x1e 0x1e 0x1e 0x1e 0x1e 0x1e 0x1e 0x1e 0x1e 0x1e 0x1 0x0 0x0 0x0 0x0
+2023-07-09 19:37:39,203 ERROR    <class 'ValueError'>
+2023-07-09 19:37:39,204 INFO     Received: 7772e5db-3868-4112-a1a9-f2669d106bf3 (Handle: 17): Unknown: bytearray(b'\x90\x00\x00\x00\x00\x00\x00\x00\x00\x00\x01\x00\x02\x1e\x00\x01\t&\x00\x00')
+2023-07-09 19:37:39,204 INFO       hex: 0x90 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x1 0x0 0x2 0x1e 0x0 0x1 0x9 0x26 0x0 0x0
+2023-07-09 19:37:39,204 ERROR    <class 'ValueError'>
+2023-07-09 19:37:39,204 INFO     Received: 7772e5db-3868-4112-a1a9-f2669d106bf3 (Handle: 17): Unknown: bytearray(b'\x90\x00\x00\x00C\x0e\t\x00\x00\x01\x00\x00\x00230702_')
+2023-07-09 19:37:39,204 INFO       hex: 0x90 0x0 0x0 0x0 0x43 0xe 0x9 0x0 0x0 0x1 0x0 0x0 0x0 0x32 0x33 0x30 0x37 0x30 0x32 0x5f
+2023-07-09 19:37:39,205 INFO     Received: 7772e5db-3868-4112-a1a9-f2669d106bf3 (Handle: 17): Unknown: bytearray(b'\x90165628\x00\x01\x00\x01\xad\xf7')
+2023-07-09 19:37:39,205 INFO       hex: 0x90 0x31 0x36 0x35 0x36 0x32 0x38 0x0 0x1 0x0 0x1 0xad 0xf7
+
+* Getting alot of SCENE data:
+<- 8080 F052 0000 0700 80F7
+(TODO)

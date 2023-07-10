@@ -2,6 +2,17 @@
 
 With this project, I'm reverse engeneering the midi protocol that the L-20 talks using the BLE-1.
 
+## Project status
+* python server is connecting to BLE characteristic, converting the MIDI data
+* currently supported MIDI commands:
+    - track volume for track 1-6 on all 7 groups (master and 6 headphone mixes)
+    - toggle mute of a track
+    - toggle solo of a track
+    - master fader volume
+    - rec/play buttons
+* jquery bases client in the layout of the iPad App:
+![Screenshot1](doc/2023-07-08_screen1.png)
+
 ## Installation
 
 Use the package manager [pip](https://pip.pypa.io/en/stable/) to install the following libraries:

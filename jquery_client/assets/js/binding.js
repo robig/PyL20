@@ -13,7 +13,9 @@ function Binding(b) {
         for (var i = 0; i < _this.elementBindings.length; i++) {
             var binding=_this.elementBindings[i]
             if(binding) {
-                binding.element[binding.attribute] = val
+                v = val
+                if(binding.mapper) v = binding.mapper(val, binding.element[binding.attribute]);
+                binding.element[binding.attribute] = v
             }
         }
     }
@@ -38,6 +40,36 @@ function Binding(b) {
                 _this.blocked = false;
             });
         }
+        _this.elementBindings.push(binding);
+        element[attribute] = _this.value;
+        return _this;
+    }
+
+    this.addClassBinding = function(element, attribute, className){
+        if(!element) return _this;
+        var binding = {
+            element: element,
+            attribute: attribute,
+            mapper: function(val, oldVal) {
+                console.log("toggle "+className);
+                $(element).removeClass(className + oldVal);
+                $(element).addClass(className + val);
+                return val;
+            }
+        };
+        _this.elementBindings.push(binding);
+        element[attribute] = _this.value;
+        return _this;
+    }
+
+    this.addMappedBinding = function(element, attribute, mapper){
+        if(!element) return _this;
+        var binding = {
+            element: element,
+            attribute: attribute,
+            mapper: mapper
+        };
+
         _this.elementBindings.push(binding);
         element[attribute] = _this.value;
         return _this;

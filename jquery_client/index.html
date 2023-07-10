@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=0.5">
 
     <link rel="stylesheet" type="text/css" href="assets/css/main.css">
+    <link rel="stylesheet" type="text/css" href="assets/css/tracks.css">
     <link rel="stylesheet" type="text/css" href="assets/css/roundslider.min.css">
 	<script src="assets/js/jquery-3.4.1.min.js"></script>
   </head>
@@ -55,14 +56,18 @@
             <button class="button rec" title="REC/PLAY">REC/PLAY</button>
 			<button class="button mute" title="Mute track">MUTE</button>
 			<button class="button solo" title="Solo">SOLO</button>
-            <div class="meter_slide">
-                <div class="value"></div>
-                <input type="range" orient="vertical" class="slider volume" max="120" />
-			    <div class="meter"></div>
-            </div>
+            <div class="groups"></div>
 			<div class="name"></div>
 		</div>
 	</template>
+
+    <template id="trk_group">
+        <div class="meter_slide tab">
+            <div class="value"></div>
+            <input type="range" orient="vertical" class="slider volume" max="120" />
+            <div class="meter"></div>
+        </div>
+    </template>
 
 
     

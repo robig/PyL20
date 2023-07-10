@@ -1,10 +1,10 @@
 #mixer {
 	/*background: url('../img/bg.png');*/
-	width: 1024px;
-	height: 768px;
+	min-width: 1024px;
+	width: 100%;
+	height: 700px;
 	position: relative;
 	left: 0px;
-	right: 0px;
 }
 body {
 	width: 100%;
@@ -29,26 +29,35 @@ button.button {
 	height: 18px;
 	width: 100%;
 	background: black;
-	padding-left: 20px;
+	margin-left: 20px;
 }
 body.closed #topbar #connection { color: yellow; }
 body.offline #topbar #connection { color: red; }
 body.connected #topbar #connection { color: green; }
 
 #track_container {
+	margin-top: 50px;
 	display: inline-block;
+	width: 736px;
+	height: 660px;
+	overflow-x: scroll;
+	overflow-y: hidden;
+	white-space:nowrap;
 }
+
 /************ MAIN SECTION *****************/
 #main {
-	display: inline-block;
+	display: block;
 	width: 275px;
 	height: 699px;
 	background: url('../img/main.png');
+	white-space: normal;
+	float: right;
 }
 #main .status {
 	position: absolute;
-	top: 30px;
-	left: 30px;
+	top: 13px;
+	left: 21px;
 }
 #main .groups {
 	position: absolute;
@@ -68,181 +77,3 @@ body.connected #topbar #connection { color: green; }
 #main .groups .button.active {
 	background: url('../img/button_red.png');
 }
-
-/********** MASTER TRACK *************/
-#main .track {
-	position: relative;
-	left: 183px;
-	top: 225px;
-	background-position-y: -225px;
-	height: 425px;
-}
-.master.track .name { color: white; }
-.master.track .button.rec {
-	top: 8px;
-}
-.master.track .button.mute {
-	top: 30px;
-}
-.master.track .button.solo {
-	top: 51px;
-}
-.master.track .meter_slide {
-	top: 173px;
-}
-
-/************ TRACKS *************/
-.tab:not(.active) {
-	display: none;
-}
-.tab {
-	width: 100%;
-}
-
-.track {
-	background: url('../img/channel_strip.png');
-	width: 92px;
-	height: 648px;
-	margin-top: 50px;
-	display: inline-block;
-}
-.track .button {
-	background: url('../img/button.png');
-	height: 30px;
-	width: 69px;
-	text-align: center;
-	position: relative;
-	margin-left: 10px;
-	font-size: 12px;
-	border: 0px;
-}
-.track .button.rec {
-	top: 233px;
-}
-.track .button.mute {
-	top: 256px;
-}
-.track .button.solo {
-	top: 275px;
-}
-.track .meter_slide {
-	position: absolute;
-	top: 430px;
-	width: 100%;
-}
-.track .slider {
-	display: inline-block;
-}
-.track .meter {
-	display: inline-block;
-	border: green solid 1px;
-	height: 214px;
-	width: 10px;
-}
-.track .value {
-	position: relative;
-	top: 1px;
-	left: 10px;
-	color: rgb(201, 201, 201);
-}
-.track .name {
-	width: 100%;
-	text-align: center;
-	position: relative;
-	top: 539px;
-}
-
-input[type=range][orient=vertical] {
-    writing-mode: bt-lr; /* IE */
-    -webkit-appearance: slider-vertical; /* Chromium */
-    padding: 0 5px;
-	/*border: solid red 1px;*/
-}
-
-input[type=range].slider {
-	width: 35px;
-	height: 214px;
-	margin: 0px 0px;
-	background-color: transparent;
-	-webkit-appearance: none;
-	padding-left: 25px;
-  }
-  input[type=range].slider:focus {
-	outline: none;
-  }
-  input[type=range].slider::-webkit-slider-runnable-track {
-	background: url('../img/fader.png');
-	border: 0;
-	width: 25px;
-	height: 47px;
-	cursor: pointer;
-  }
-  input[type=range].slider::-webkit-slider-thumb {
-	margin-top: 0px;
-	width: 25px;
-	height: 47px;
-	cursor: pointer;
-	-webkit-appearance: none;
-  }
-  input[type=range].slider::-moz-range-thumb {
-	width: 25px;
-	height: 47px;
-	background: url('../img/fader.png');
-	border: 0px;
-	cursor: pointer;
-  }
-  .master input[type=range].slider::-moz-range-thumb {
-	background: url('../img/fader_main.png');
-  }
-  input[type=range].slider:focus::-webkit-slider-runnable-track {
-	background: #fffff0;
-  }
-  input[type=range].slider::-moz-range-track {
-	background: transparent;
-	border: 0px;
-	cursor: pointer;
-  }
-  
-  input[type=range].slider::-ms-track {
-	background: transparent;
-	border-color: transparent;
-	border-width: 0.8px 0;
-	color: transparent;
-	width: 100%;
-	height: 32px;
-	cursor: pointer;
-  }
-  input[type=range].slider::-ms-fill-lower {
-	background: #ffffbd;
-	border: 0;
-  }
-  input[type=range].slider::-ms-fill-upper {
-	background: #ffffd6;
-	border: 0;
-  }
-  input[type=range].slider::-ms-thumb {
-	width: 32px;
-	height: 32px;
-	background: #bb71a9;
-	border: 1.9px solid rgba(0, 30, 0, 0.57);
-	border-radius: 4px;
-	cursor: pointer;
-	margin-top: 0px;
-	/*Needed to keep the Edge thumb centred*/
-  }
-  input[type=range].slider:focus::-ms-fill-lower {
-	background: #ffffd6;
-  }
-  input[type=range].slider:focus::-ms-fill-upper {
-	background: #fffff0;
-  }
-  /*TODO: Use one of the selectors from https://stackoverflow.com/a/20541859/7077589 and figure out
-  how to remove the virtical space around the range input in IE*/
-  @supports (-ms-ime-align:auto) {
-	/* Pre-Chromium Edge only styles, selector taken from hhttps://stackoverflow.com/a/32202953/7077589 */
-	input[type=range].slider {
-	  margin: 0;
-	  /*Edge starts the margin from the thumb, not the track as other browsers do*/
-	}
-  }
-  

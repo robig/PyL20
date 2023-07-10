@@ -1,20 +1,45 @@
 //webkitURL is deprecated but nevertheless
 
 // load config
+var server_url='ws://localhost:5000';
 jQuery.getJSON( "config.json", function( data ) {
 	console.log(data);
 	
+	if(data.connection && data.connection.url)
+		server_url=data.connection.url;
 	onLoad(data);
 }
 );
 
 var track_data = [];
 var main_data = {"master": {"value": 0, "mute": 0, "solo": 0}}
-var ignore_incoming=[];
+var message_callbacks = [];
 var mouseDown=false;
+var track_selected = {"group": 0, "track": null};
+
+message_callbacks.push({
+	"filter": function(cmd) {
+		return cmd.function=="track-info";
+	},
+	"action": function(cmd) {
+		console.log("got a Track Info Response")
+		if(cmd.tracks) {
+			cmd.tracks.forEach(t => {
+				//console.log(t);
+				var i = t.number;
+				track_data[i].name = t.name;
+				track_data[i].color = t.color;
+				track_data[i].mute = t.mute;
+				track_data[i].solo = t.solo;
+			});
+		}
+	}
+})
+
+
 
 function onLoad(config) {
-	var channelCount = config.channels.count;
+	var trackCount = config.tracks.mono.count;
 	var groupCount = config.groups.count;
 	var groupNames = config.groups.names;
 	//var group=0; // todo 0=master group
@@ -23,46 +48,60 @@ function onLoad(config) {
 	var mixer = $('#track_container');
 	var trackTemplate = $('template#track_tpl').html();
 
-	var groups = $('#main .groups');
-	var groupTemplate = $('template#group_tpl').html();
-	for(var g=0; g<groupCount; g++) {
-		track_data[g]=[]; 
-		var grp = $(groupTemplate);
-		grp.appendTo(groups);
-		grp.text(groupNames[g]);
-		grp.attr("x-group", g); // groupID on element
-		grp.on("click", function() {
-			var gid = $(this).attr("x-group");
-			console.log("Activate group: #"+gid+" "+groupNames[gid]);
-			$("#main .groups .button").removeClass("active");
-			$(this).addClass("active");
-			$("#mixer .tab").removeClass("active");
-			$("#mixer .tab.group"+gid).addClass("active");
+	for(var i=0; i<trackCount; i++) {
+		var t = $(trackTemplate);
+		t.appendTo(mixer);
+		t.addClass("track"+(i+1));
+		t.find(".name").text("CH"+(i+1));
+		t.attr("x-track", i);
+		t.on("click", function() {
+			var trk = $(this).attr("x-track");
+			track_selected.track = trk;
+			$(this).parent().find(".track").removeClass("selected");
+			$(this).addClass("selected");
 		});
 
-		var tab = $("<div class='tab group"+g+"'></div>");
-		if(g==config.groups.startup) {
-			console.log("Active group: "+g);
-			$("body").addClass("activeGroup"+g);
-			grp.addClass("active");
-			tab.addClass("active");
-		}
-		tab.appendTo(mixer);
+		track_data[i] = {"name": "CH"+(i+1), "color": 0, "value": 0, "channel": i, "group": g, "mute": 0, "solo": 0, "rec": 0, "groups":[]};
 
-		for(var i=0; i<channelCount; i++) {
-			
-			var t = $(trackTemplate);
-			t.appendTo(tab);
-			t.addClass("track"+(i+1));
-			t.find(".name").text("CH"+(i+1));
+		var groups = $('#main .groups');
+		var groupTemplate = $('template#group_tpl').html();
 
-			track_data[g][i] = {"name": "CH"+(i+1), "value": 0, "channel": i, "group": g, "mute": 0, "solo": 0};
+		var trkGroups=t.find(".groups");
+		var trkGroupsTemplate=$('template#trk_group').html();
+		for(var g=0; g<groupCount; g++) {
+			track_data[i].groups[g]={"value": 0};
+
+			// group buttons in main section:
+			if(i==0) {
+				var grp = $(groupTemplate);
+				grp.appendTo(groups);
+				grp.text(groupNames[g]);
+				grp.attr("x-group", g); // groupID on element
+				grp.on("click", function() {
+					var gid = $(this).attr("x-group");
+					console.log("Activate group: #"+gid+" "+groupNames[gid]);
+					$("#main .groups .button").removeClass("active");
+					$(this).addClass("active");
+					$("#mixer .tab").removeClass("active");
+					$("#mixer .tab.group"+gid).addClass("active");
+				});
+			}
+	
+			var tab = $(trkGroupsTemplate);
+			tab.addClass("group"+g);
+			if(g==config.groups.startup) {
+				$("body").addClass("activeGroup"+g);
+				grp.addClass("active");
+				tab.addClass("active");
+			}
+			tab.appendTo(trkGroups);
 			
+
 			var b = new Binding({
-				object: track_data[g][i],
+				object: track_data[i].groups[g],
 				property: "value"
 			});
-			var elSlider = t.find(".slider")[0];
+			var elSlider = tab.find(".slider")[0];
 			$(elSlider).attr("x-group", g);
 			$(elSlider).attr("x-track", i);
 			b.addBinding(elSlider, "value", "input");
@@ -73,8 +112,7 @@ function onLoad(config) {
 				const now = Date.now();
 				if((now - lastChange) > 100 ) { //DEbounce
 					lastChange = Date.now();
-					sendToServer({"context": "track", "value": track_data[gid][trk].value, "group": track_data[gid][trk].group, "channel": track_data[gid][trk].channel});
-					//sendToServer(track_data[gid][trk]);
+					sendToServer({"context": "track", "value": track_data[trk].groups[gid].value, "group": gid, "channel": track_data[trk].channel});
 				}
 			});
 			$(elSlider).on('mousedown', function() {mouseDown=true;});
@@ -82,13 +120,81 @@ function onLoad(config) {
 				mouseDown=false;
 				var gid = $(this).attr("x-group");
 				var trk = $(this).attr("x-track");
-				sendToServer({"context": "track", "value": track_data[gid][trk].value, "group": track_data[gid][trk].group, "channel": track_data[gid][trk].channel});
+				sendToServer({"context": "track", "value": track_data[trk].groups[gid].value, "group": gid, "channel": track_data[trk].channel});
 			});
 
-			var elValue= t.find(".value")[0];
-			b.addBinding(elValue, "innerHTML");
+			var elValue= tab.find(".value")[0];
+			b.addMappedBinding(elValue, "innerHTML", function(val) {
+				// max  = 120 -> 10
+				//        108 -> +5
+				// zero =  88 ->  0
+				//         68 -> -5
+				//         45 -> -10
+				//         24 -> -20
+				return val;
+				var num = val * 10 / 120; // convert midi value to dB
+
+				return Math.round(num * 100) / 100; // round to 2 decimals
+			});
 			//console.log("Binding setup"+i);
-		}
+		} // for groups
+	
+		// MUTE button
+		var el = t.find(".mute");
+		b = new Binding({
+			object: track_data[i],
+			property: "mute"
+		});
+		b.addClassBinding(el[0], "x-value", "value");
+		el.on("click", function(event) {
+			var trk = $(this).parent().attr("x-track");
+			var track = track_data[trk];
+			track.mute = (track.mute == 0 ? 1 : 0);
+			console.log("mute: "+track.mute);
+			sendToServer({"context": "track", "mute": track_data[trk].mute, "channel": track_data[trk].channel});
+		});
+		message_callbacks.push({
+			"filter": function(cmd) {
+				return cmd.context=="track" && cmd.function=="mute";
+			},
+			"action": function(cmd) {
+				console.log("MUTE for track #"+trk)
+			}
+		});
+
+		// SOLO button
+		el = t.find(".solo");
+		b = new Binding({
+			object: track_data[i],
+			property: "solo"
+		});
+		b.addClassBinding(el[0], "x-solo", "solo");
+		el.on("click", function(event) {
+			var trk = $(this).parent().attr("x-track");
+			var track = track_data[trk];
+			track.solo = (track.solo == 0 ? 1 : 0);
+			if(track.solo==1) {
+				$(this).parent().addClass("solo");
+			}else{
+				$(this).parent().removeClass("solo");
+			}
+			sendToServer({"context": "track", "solo": track_data[trk].solo, "channel": track_data[trk].channel});
+		});
+
+		// REC/PLAY button
+		el = t.find(".rec");
+		b = new Binding({
+			object: track_data[i],
+			property: "rec"
+		});
+		b.addClassBinding(el[0], "x-rec", "rec");
+		el.on("click", function(event) {
+			var trk = $(this).parent().attr("x-track");
+			var track = track_data[trk];
+			track.rec = (track.rec == 2 ? 0 : track.rec + 1 );
+			sendToServer({"context": "track", "rec": track_data[trk].rec, "channel": track_data[trk].channel});
+		});
+		
 	}
 
 	// create master track binding:
@@ -118,16 +224,21 @@ function sendToServer(data) {
 	}
 }
 
+function cmdTrackInfo() {
+	sendToServer({"cmd": "track_info"});
+}
+
 var sending = false;
 var socket = null;
 function connect() {
-	socket = new WebSocket('ws://localhost:5000');
+	socket = new WebSocket(server_url);
 	socket.addEventListener('open', function (event) {
 		$('#connection').text("connected");
 		$('body').addClass("connected");
 		$('body').removeClass("offline");
 		$('body').removeClass("closed");
-	    socket.send('Hi!');
+	    //socket.send('Hi!');
+		cmdTrackInfo(); // receive track states
 	});
 	 
 	socket.addEventListener('message', function (event) {
@@ -174,6 +285,10 @@ function parseIncomingCommand(cmd) {
 				}
 			}
 		}
+	}
+	for(var i=0;i<message_callbacks.length; i++){
+		cb=message_callbacks[i]
+		if(cb.filter(cmd)) cb.action(cmd);
 	}
 	if(cmd.context=="main" && cmd.function == "volume") {
 		main_data.master.value = cmd.value;

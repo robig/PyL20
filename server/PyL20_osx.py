@@ -103,6 +103,9 @@ async def cmd_track_info_join():
     message = decode_sysex_message(buffer[1:])
     await ws_task.send_to_clients(message)
 
+    raw = raw_decode_sysex_message(b"\x00"+buffer)
+    await ws_task.send_to_clients({"command": {"raw": raw}})
+
 async def cmd_track_info_raw():
     buffer = b""
     while not response_queue.empty():

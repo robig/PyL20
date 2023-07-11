@@ -17,6 +17,68 @@ var message_callbacks = [];
 var mouseDown=false;
 var track_selected = {"group": 0, "track": null};
 
+//////////// for debugging/decoding ////////////////
+function showDebug(data) {
+	console.log(data);
+	if(data) $("#debug textarea").val(data);
+	$("#debug").show();
+}
+$("#debug .close").on("click", function() {$(this).parent().hide();});
+function printDiff(o1, o2) {
+	arr1=o1.split('\n')
+	arr2=o2.split('\n')
+	ret=[]
+	diffLines=[]
+	for(var i=0;i<arr1.length && i<arr2.length;i++) {
+		var lineNumber = ("00" + i).slice (-3)
+		var d = "=";
+		if(arr1[i] != arr2[i]) {
+			d="+";
+			diffLines.push(lineNumber);
+			var oldline=lineNumber+" -"+arr1[i];
+			ret.push(oldline+"\n");
+		}
+		var line = lineNumber+" "+d + arr2[i];
+		ret.push(line+"\n");
+	}
+	//$("#debug").html(ret);
+	showDebug(ret);
+	console.log("lines that are different: "+diffLines.length, diffLines);
+	return ret;
+}
+lastMessage=null;
+debugEnabled=false;
+message_callbacks.push(
+	{
+		"filter": function(cmd) {
+			return cmd.raw && cmd.raw!= null;
+		},
+		"action": function(cmd) {
+			console.log("got RAW Response");
+			if(debugEnabled && lastMessage!=null) {
+				printDiff(lastMessage, cmd.raw);
+			}
+
+			lastMessage = cmd.raw;
+		}
+	}
+);
+
+////////////////////////////////////////////////////
+message_callbacks.push(
+	{ // Track Volume chages
+		"filter": function(cmd) {
+			return cmd.context=="track" && cmd.function == "volume" && !mouseDown;
+		},
+		"action": function(cmd) {
+			if(cmd.group >= 0 && cmd.group < 8) {
+				var g = cmd.group;
+				var trk = cmd.channel;
+				track_data[trk].groups[g].value=cmd.value;
+			}
+		}
+	}
+);
 message_callbacks.push({
 	"filter": function(cmd) {
 		return cmd.function=="track-info";
@@ -25,13 +87,20 @@ message_callbacks.push({
 		console.log("got a Track Info Response")
 		if(cmd.tracks) {
 			cmd.tracks.forEach(t => {
-				//console.log(t);
+				console.log(t);
 				var i = t.number;
 				if(track_data[i]) {
 					track_data[i].name = t.name;
 					track_data[i].color = t.color;
 					track_data[i].mute = t.mute;
 					track_data[i].solo = t.solo;
+					
+					if(t.values)
+						t.values.forEach((v,num) => {
+							console.log("channel "+num+"="+v);
+							track_data[i].groups[num].value = v;
+						});
+					
 				}
 			});
 		}
@@ -92,6 +161,7 @@ function onLoad(config) {
 			$(this).parent().find(".track").removeClass("selected");
 			$(this).addClass("selected");
 		});
+		t.find(".number").text(i);
 
 		track_data[i] = {"name": "CH"+(i+1), "color": 0, "value": 0, "channel": i, "group": g, "mute": 0, "solo": 0, "rec": 0, "groups":[]};
 
@@ -166,6 +236,10 @@ function onLoad(config) {
 				var gid = $(this).attr("x-group");
 				var trk = $(this).attr("x-track");
 				sendToServer({"context": "track", "value": track_data[trk].groups[gid].value, "group": gid, "channel": track_data[trk].channel});
+			});
+			$(elSlider).bind('mousewheel DOMMouseScroll', function(e) {
+				console.log(e.originalEvent);
+				console.log(e.originalEvent.detail);
 			});
 
 			var elValue= tab.find(".value")[0];
@@ -310,20 +384,6 @@ function connect() {
 }
 
 function parseIncomingCommand(cmd) {
-	//console.log(mouseDown);
-	if(cmd.context=="track" && cmd.function == "volume" && !mouseDown) {
-		console.log("TrackVolume on group:"+cmd.group);
-		if(cmd.group >= 0 && cmd.group < track_data.length) {
-			var g = cmd.group;
-			for(var i=0; i<track_data[g].length; i++) {
-				var t=track_data[g][i];
-				if(t.channel == cmd.channel && t.group == cmd.group) {
-					t.value = cmd.value;
-					console.log("Volume: "+cmd.value);
-				}
-			}
-		}
-	}
 	for(var i=0;i<message_callbacks.length; i++){
 		cb=message_callbacks[i]
 		if(cb.filter(cmd)) cb.action(cmd);

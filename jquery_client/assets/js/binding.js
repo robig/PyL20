@@ -51,7 +51,7 @@ function Binding(b) {
             element: element,
             attribute: attribute,
             mapper: function(val, oldVal) {
-                console.log("toggle "+className);
+                //console.log("toggle "+className);
                 $(element).removeClass(className + oldVal);
                 $(element).addClass(className + val);
                 return val;

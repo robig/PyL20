@@ -1,12 +1,22 @@
 from _spec import *
 
 
-# convert json dict to bytearray (without DATA_PREFIX)
+# convert json dict message to bytearray (without DATA_PREFIX)
 def convert_to_bytes(data):
-    channel = int(data["channel"])
-    control = get_CC_from_track_data(data)
-    value = get_Value_from_track_data(control, data)
-    print("control=", control)
+    channel = 0
+    control = 0
+    value = 0
+    if data["context"] == "track":
+        control = get_CC_from_track_data(data)
+        value = get_Value_from_track_data(control, data)
+        channel = int(data["channel"])
+    elif data["context"] == "main":
+        print("main")
+        control = get_CC_from_main_data(data)
+        channel = int(data["channel"])
+        value = int(data["value"])
+
+    print("MIDI message built: ", [channel, control, value])
     return bytearray([channel + MIDI_CC_BASE, control, value])
 
 # convert json dict to control value
@@ -19,8 +29,15 @@ def get_CC_from_track_data(data):
         return MIDI_CC_TRACK_REC
     
     group = int(data["group"])
-    if group >= 0 and group < len(MIDI_CC_TRACK_GROUPS):
-        return MIDI_CC_TRACK_GROUPS[group]
+    if data["channel"]>15: #ther can only be 16 channels (0..15)
+        print("channel16", data["channel"])
+        data["channel"]=data["channel"]-16
+        print("channel now", data["channel"])
+        if group >= 0 and group < len(MIDI_CC_TRACK_ST_GROUPS):
+            return MIDI_CC_TRACK_ST_GROUPS[group]
+    else:
+        if group >= 0 and group < len(MIDI_CC_TRACK_GROUPS):
+            return MIDI_CC_TRACK_GROUPS[group]
     return 0
 
 # convert json dict (and control value) to value value
@@ -34,7 +51,14 @@ def get_Value_from_track_data(cc, data):
         value = int(data["rec"])
     return value
 
+# convert json dict to control value (for main/master section)
+def get_CC_from_main_data(data):
+    if data["channel"] == 0: #master
+        channel = MIDI_CHAN_MASTER_VOLUME # main channel starts at 10
+        return MIDI_CC_MASTER_VOLUME
+    
 
+    return MIDI_CC_MASTER_VOLUME #fallback
 
 def print_hex_line(data : bytearray):
     res = ' '.join(format(x, '02x') for x in data)
@@ -60,6 +84,13 @@ def raw_decode_sysex_message(sysex_data : bytearray):
 
 
 def decode_sysex_message(sysex_data : bytearray):
+    sysex_type=sysex_data[1]
+    if sysex_type == MIDI_SYSEX_TRACK_INFO:
+        return decode_sysex_track_info(sysex_data)
+    print("Unknown SysEx message type: "+str(sysex_type))
+    return {"info": "unknown sysex message received"}
+
+def decode_sysex_track_info(sysex_data : bytearray):
     num_tracks=18
     num_groups=7
     fx_tracks=2
@@ -67,7 +98,7 @@ def decode_sysex_message(sysex_data : bytearray):
     line_len=9
     i = offset
 
-    command = {"function":"track-info", "tracks": []}
+    command = {"function":"track-info", "tracks": [], "master": {"value": 0}}
 
     buffer=bytearray()
     while i < len(sysex_data):
@@ -113,13 +144,18 @@ def decode_sysex_message(sysex_data : bytearray):
         d=sysex_data[f]
         command["tracks"][i]["solo"]=int(d)
 
-    # track volumes on line 47
-    offset=47*line_len;
+    # track volumes start on line 47
+    offset=47*line_len + 4
     for g in range(0, num_groups):
         for i in range(0, num_tracks-1):
             f=offset + i
             d=sysex_data[f]
             command["tracks"][i]["values"].append(int(d))
         offset+=num_tracks
+
+    # master volume (at line 64 + 4byte)
+    offset = 47*line_len
+    d=sysex_data[offset]
+    command['master']['value']=int(d)
 
     return { "command": command }

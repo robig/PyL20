@@ -5,6 +5,12 @@
     "tracks": {
         "mono": {
             "count": 16
+        },
+        "stereo": {
+            "count": 2
+        },
+        "fx": {
+            "count": 2
         }
     },
     "groups": {

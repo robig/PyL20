@@ -75,7 +75,7 @@
 }
 .track .meter {
 	display: inline-block;
-	border: green solid 1px;
+	/*border: green solid 1px;*/
 	height: 214px;
 	width: 10px;
 	padding-top: 10px;

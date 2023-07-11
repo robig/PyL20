@@ -6,16 +6,28 @@ def create_json_message(message):
     func = None
     context= None
     group = None
+    chan = message.channel
 
     if message.type == MIDI_CC:
 
-        # Volume for all tracks:
+        # Volume for tracks 1-16:
         for i in range(0, len(MIDI_CC_TRACK_GROUPS)):
             grp = MIDI_CC_TRACK_GROUPS[i]
             if message.control == grp:
                 func="volume"
                 context="track"
                 group=i
+                break
+
+        # Volume for stereo tracks 17-20:
+        for i in range(0, len(MIDI_CC_TRACK_ST_GROUPS)):
+            grp = MIDI_CC_TRACK_ST_GROUPS[i]
+            if message.control == grp:
+                func="volume"
+                context="track"
+                group=i
+                chan=16+message.channel
+                break
 
         # track mute:
         if message.control == MIDI_CC_TRACK_MUTE:
@@ -35,4 +47,4 @@ def create_json_message(message):
             func="volume"
             context="main"
 
-    return { "command": { "type": message.type, "channel": message.channel, "control": message.control, "value": message.value, "function": func, "context": context, "group": group } }
+    return { "command": { "type": message.type, "channel": chan, "control": message.control, "value": message.value, "function": func, "context": context, "group": group } }

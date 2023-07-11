@@ -86,7 +86,7 @@ async def ws_process_request(data):
         if data.get("cmd") == "track_info":
             await cmd_track_info()
         return
-    if data["context"] == "track":
+    if data["context"] == "track" or data["context"] == "main":
         message_queue.put_nowait(data)
     True
 
@@ -133,7 +133,11 @@ async def received_data(sender: BleakGATTCharacteristic, data: bytearray):
 
     if data[-1:] == MIDI_SYSEX_END:
         print("SysEx END")
-        await cmd_track_info_join();
+        try:
+            await cmd_track_info_join()
+        except Exception as e:
+            logger.error("decoding sysex message: %s", str(e))
+        
     
 
 
@@ -191,7 +195,10 @@ async def ble_main(): #args: argparse.Namespace):
                                 do_disconnect = True
                                 do_connect = False
                                 break
-                            await send_midi_message_to_mixer(client, msg)
+                            try:
+                                await send_midi_message_to_mixer(client, msg)
+                            except Exception as e:
+                                logger.error("Error sending message to mixer: %s", str(e))
                         await asyncio.sleep(0.1)
 
                     device_status["connected"] = False

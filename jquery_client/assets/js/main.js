@@ -74,6 +74,10 @@ message_callbacks.push(
 			if(cmd.group >= 0 && cmd.group < 8) {
 				var g = cmd.group;
 				var trk = cmd.channel;
+				// the two stereo tracks are on channel 16 and 18
+				if(trk==18){
+					trk=17 // translate chan 18 to index 17
+				}
 				track_data[trk].groups[g].value=cmd.value;
 			}
 		}
@@ -106,7 +110,7 @@ message_callbacks.push({
 		}
 	}
 });
-message_callbacks.push({
+message_callbacks.push({ // Track MUTE
 	"filter": function(cmd) {
 		return cmd.context=="track" && cmd.function=="mute";
 	},
@@ -116,7 +120,7 @@ message_callbacks.push({
 		track_data[trk].mute = cmd.value;
 	}
 });
-message_callbacks.push({
+message_callbacks.push({ // Track SOLO
 	"filter": function(cmd) {
 		return cmd.context=="track" && cmd.function=="solo";
 	},
@@ -126,7 +130,7 @@ message_callbacks.push({
 		track_data[trk].solo = cmd.value;
 	}
 });
-message_callbacks.push({
+message_callbacks.push({ // Track REC
 	"filter": function(cmd) {
 		return cmd.context=="track" && cmd.function=="rec";
 	},
@@ -140,7 +144,10 @@ message_callbacks.push({
 
 
 function onLoad(config) {
-	var trackCount = config.tracks.mono.count;
+	var monoTrackCount = config.tracks.mono.count;
+	var stereoTrackCount = config.tracks.stereo.count;
+	var fxTrackCount = config.tracks.fx.count;
+	var trackCount = monoTrackCount + stereoTrackCount;
 	var groupCount = config.groups.count;
 	var groupNames = config.groups.names;
 	//var group=0; // todo 0=master group
@@ -161,7 +168,11 @@ function onLoad(config) {
 			$(this).parent().find(".track").removeClass("selected");
 			$(this).addClass("selected");
 		});
-		t.find(".number").text(i);
+		t.find(".number").text(i+1);
+		if(i>=monoTrackCount) {
+			var tc = 1+monoTrackCount+(i-monoTrackCount)*2;
+			t.find(".number").text(tc+"/"+(tc+1));
+		}
 
 		track_data[i] = {"name": "CH"+(i+1), "color": 0, "value": 0, "channel": i, "group": g, "mute": 0, "solo": 0, "rec": 0, "groups":[]};
 
@@ -200,13 +211,15 @@ function onLoad(config) {
 					$("#mixer .tab").removeClass("active");
 					$("#mixer .tab.group"+gid).addClass("active");
 				});
+				if(g==config.groups.startup) {
+					grp.addClass("active");
+				}
 			}
 	
 			var tab = $(trkGroupsTemplate);
 			tab.addClass("group"+g);
 			if(g==config.groups.startup) {
 				$("body").addClass("activeGroup"+g);
-				grp.addClass("active");
 				tab.addClass("active");
 			}
 			tab.appendTo(trkGroups);
@@ -238,8 +251,12 @@ function onLoad(config) {
 				sendToServer({"context": "track", "value": track_data[trk].groups[gid].value, "group": gid, "channel": track_data[trk].channel});
 			});
 			$(elSlider).bind('mousewheel DOMMouseScroll', function(e) {
-				console.log(e.originalEvent);
+				//console.log(e.originalEvent);
 				console.log(e.originalEvent.detail);
+				var gid = $(this).attr("x-group");
+				var trk = $(this).attr("x-track");
+				var val=parseInt($(this).val()) - e.originalEvent.detail;
+				sendToServer({"context": "track", "value": val, "group": gid, "channel": track_data[trk].channel});
 			});
 
 			var elValue= tab.find(".value")[0];
@@ -319,6 +336,13 @@ function onLoad(config) {
 	b.addBinding(elSlider, "value", "input");
 	var elValue= t.find(".value")[0];
 	b.addBinding(elValue, "innerHTML");
+	elSlider.addEventListener("input", function() {
+		const now = Date.now();
+		if((now - lastChange) > 100 ) { //DEbounce
+			lastChange = Date.now();
+			sendToServer({"context": "main", "value": main_data.master.value, "channel": 0});
+		}
+	});
 
 	// connect to ws server:
 	connect();

@@ -5,16 +5,33 @@ DATA_PREFIX=b"\x80\x80"
 
 MIDI_CC_BASE=176
 MIDI_CC="control_change"
-MIDI_CC_TRACK_VOLUME=60 #master
-MIDI_CC_TRACK_VOLUME_A=62
-MIDI_CC_TRACK_VOLUME_B=64
-MIDI_CC_TRACK_VOLUME_C=66
-MIDI_CC_TRACK_VOLUME_D=68
-MIDI_CC_TRACK_VOLUME_E=70
-MIDI_CC_TRACK_VOLUME_F=72
-MIDI_CC_TRACK_REC=54
-MIDI_CC_TRACK_SOLO=50
-MIDI_CC_TRACK_MUTE=48
+MIDI_CC_TRACK_VOLUME=60     # master value 0-120
+MIDI_CC_TRACK_VOLUME_A=62   # value 0-120
+MIDI_CC_TRACK_VOLUME_B=64   # value 0-120
+MIDI_CC_TRACK_VOLUME_C=66   # value 0-120
+MIDI_CC_TRACK_VOLUME_D=68   # value 0-120
+MIDI_CC_TRACK_VOLUME_E=70   # value 0-120
+MIDI_CC_TRACK_VOLUME_F=72   # value 0-120
+MIDI_CC_TRACK_REC=54        # value 0,1,2
+MIDI_CC_TRACK_SOLO=50       # value 0/1
+MIDI_CC_TRACK_MUTE=48       # value 0/1
+MIDI_CC_TRACK_EQ_OFF=14     # value 0/1
+MIDI_CC_TRACK_EQ_PHASE=10   # value 0/1
+MIDI_CC_TRACK_EQ_LOWCUT=46  # value 0-56
+MIDI_CC_TRACK_EQ_MID_FRQ=24 # value 0-96
+MIDI_CC_TRACK_EQ_MID=26     # value 0-60
+MIDI_CC_TRACK_EQ_HIGH=20    # value 0-60
+MIDI_CC_TRACK_PAN=12        # value 0-100
+MIDI_CC_TRACK_FX1=52        # value 0-60
+MIDI_CC_TRACK_FX2=54        # value 0-60
+
+MIDI_CC_FX=80 # channel 12 + 13, value 0-120
+              # mute FX1: CC=80 channel=4 value=0/1
+              # mute FX2: CC=80 channel=5 value=0/1
+              # solo FX1: CC=80 channel=8 value=0/1
+              # solo FX2: CC=80 channel=9 value=0/1
+MIDI_CC_FX_EFFECT=78 # FX1: channel=0
+                     # FX2: channel=1
 
 MIDI_CC_MASTER_VOLUME=84
 MIDI_CHAN_MASTER_VOLUME=10

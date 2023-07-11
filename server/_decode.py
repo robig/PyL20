@@ -34,25 +34,11 @@ def get_Value_from_track_data(cc, data):
         value = int(data["rec"])
     return value
 
-# converts Midi message to json for the client
-def message2obj(message):
-    # map for client:
-    func = None
-    context= None
-    group = None
-    if message.type == MIDI_CC and message.control == MIDI_CC_TRACK_VOLUME:
-        func="volume"
-        context="track"
-        group=0
-    elif message.type == MIDI_CC and message.control == MIDI_CC_TRACK_VOLUME_A:
-        func="volume"
-        context="track"
-        group=1
-    elif message.type == MIDI_CC and message.control == MIDI_CC_MASTER_VOLUME and message.channel == MIDI_CHAN_MASTER_VOLUME:
-        func="volume"
-        context="main"
-    return { "command": { "type": message.type, "channel": message.channel, "control": message.control, "value": message.value, "function": func, "context": context, "group": group } }
 
+
+def print_hex_line(data : bytearray):
+    res = ' '.join(format(x, '02x') for x in data)
+    print("%s %s" % (res, data))
 
 def decode_sysex_message(sysex_data : bytearray):
     num_tracks=18
@@ -68,9 +54,7 @@ def decode_sysex_message(sysex_data : bytearray):
         #print(sysex_data[i])
         buffer.append(sysex_data[i])
         if (i - offset) % line_len == 0:
-            print(buffer)
-            #d = " ".join(hex(n) for n in buffer)
-            #print(d)
+            print_hex_line(buffer)
             buffer.clear()
         i += 1
 
@@ -79,11 +63,11 @@ def decode_sysex_message(sysex_data : bytearray):
         f=offset + i*line_len
         t=f+line_len
         d=sysex_data[f:t]
-        command["tracks"].append({"number": i, "name": d.decode().replace("\x00",""), "color": 0, "mute": 0, "solo": 0})
+        command["tracks"].append({"number": i, "name": d.decode('utf8', errors='ignore').replace("\x00",""), "color": 0, "mute": 0, "solo": 0})
 
     # two FX
     command["tracks"].append({"number":19, "name": "FX1", "color": 0, "mute": 0, "solo": 0})
-    command["tracks"].append({"number":20 "name": "FX2", "color": 0, "mute": 0, "solo": 0})
+    command["tracks"].append({"number":20, "name": "FX2", "color": 0, "mute": 0, "solo": 0})
 
     # track colors:
     offset += num_tracks*line_len #18 namedd tracks
@@ -96,7 +80,7 @@ def decode_sysex_message(sysex_data : bytearray):
     offset += num_tracks
 
     # mute
-    offset += num_tracks+fx_tracks #18 tracks + 2 fx - MASTER?
+    offset += num_tracks #18 tracks
     for i in range(0, num_tracks+fx_tracks-1):
         f=offset + i
         d=sysex_data[f]

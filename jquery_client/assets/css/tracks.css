@@ -91,9 +91,28 @@
 	text-align: center;
 	position: relative;
 	top: 339px;
+    color: #232323;
+}
+.track .name.color1 {
+    background: #fe0000;
+}
+.track .name.color2 {
+    background: #fe8000;
+}
+.track .name.color3 {
+    background: #ffff01;
+}
+.track .name.color4 {
+    background: #01e500;
+}
+.track .name.color5 {
+    background: #00aef2;
 }
 .track .name.color6 {
-    background: blue;
+    background: #005fff;
+}
+.track .name.color7 {
+    background: #7446ff;
 }
 
 input[type=range][orient=vertical] {

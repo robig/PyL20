@@ -27,14 +27,46 @@ message_callbacks.push({
 			cmd.tracks.forEach(t => {
 				//console.log(t);
 				var i = t.number;
-				track_data[i].name = t.name;
-				track_data[i].color = t.color;
-				track_data[i].mute = t.mute;
-				track_data[i].solo = t.solo;
+				if(track_data[i]) {
+					track_data[i].name = t.name;
+					track_data[i].color = t.color;
+					track_data[i].mute = t.mute;
+					track_data[i].solo = t.solo;
+				}
 			});
 		}
 	}
-})
+});
+message_callbacks.push({
+	"filter": function(cmd) {
+		return cmd.context=="track" && cmd.function=="mute";
+	},
+	"action": function(cmd) {
+		var trk=cmd.channel;
+		console.log("MUTE for track #"+trk);
+		track_data[trk].mute = cmd.value;
+	}
+});
+message_callbacks.push({
+	"filter": function(cmd) {
+		return cmd.context=="track" && cmd.function=="solo";
+	},
+	"action": function(cmd) {
+		var trk=cmd.channel;
+		console.log("SOLO for track #"+trk);
+		track_data[trk].solo = cmd.value;
+	}
+});
+message_callbacks.push({
+	"filter": function(cmd) {
+		return cmd.context=="track" && cmd.function=="rec";
+	},
+	"action": function(cmd) {
+		var trk=cmd.channel;
+		console.log("REC for track #"+trk);
+		track_data[trk].rec = cmd.value;
+	}
+});
 
 
 
@@ -62,6 +94,19 @@ function onLoad(config) {
 		});
 
 		track_data[i] = {"name": "CH"+(i+1), "color": 0, "value": 0, "channel": i, "group": g, "mute": 0, "solo": 0, "rec": 0, "groups":[]};
+
+		var elName = t.find(".name")[0];
+		var b = new Binding({
+			object: track_data[i],
+			property: "name"
+		});
+		b.addBinding(elName, "innerHTML");
+
+		var b = new Binding({
+			object: track_data[i],
+			property: "color"
+		});
+		b.addClassBinding(elName, "x-value", "color");
 
 		var groups = $('#main .groups');
 		var groupTemplate = $('template#group_tpl').html();
@@ -153,14 +198,6 @@ function onLoad(config) {
 			console.log("mute: "+track.mute);
 			sendToServer({"context": "track", "mute": track_data[trk].mute, "channel": track_data[trk].channel});
 		});
-		message_callbacks.push({
-			"filter": function(cmd) {
-				return cmd.context=="track" && cmd.function=="mute";
-			},
-			"action": function(cmd) {
-				console.log("MUTE for track #"+trk)
-			}
-		});
 
 		// SOLO button
 		el = t.find(".solo");
@@ -180,6 +217,7 @@ function onLoad(config) {
 			}
 			sendToServer({"context": "track", "solo": track_data[trk].solo, "channel": track_data[trk].channel});
 		});
+		
 
 		// REC/PLAY button
 		el = t.find(".rec");
@@ -272,7 +310,7 @@ function connect() {
 }
 
 function parseIncomingCommand(cmd) {
-	console.log(mouseDown);
+	//console.log(mouseDown);
 	if(cmd.context=="track" && cmd.function == "volume" && !mouseDown) {
 		console.log("TrackVolume on group:"+cmd.group);
 		if(cmd.group >= 0 && cmd.group < track_data.length) {

@@ -11,6 +11,7 @@ from mido import Message
 from _spec import *
 from _decode import *
 from _ws import *
+from _json_messages import *
 
 logging.basicConfig(format="%(asctime)s %(levelname)-8s %(message)s", level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -117,7 +118,7 @@ async def received_data(sender: BleakGATTCharacteristic, data: bytearray):
         msg=Message.from_bytes(data[2:])
         
         logger.info("decoded incoming message: %s" % msg)
-        await ws_task.send_to_clients(message2obj(msg))
+        await ws_task.send_to_clients(create_json_message(msg))
         return
     except Exception as e:
         logger.error("No MIDI message or parse error: "+ str(e))

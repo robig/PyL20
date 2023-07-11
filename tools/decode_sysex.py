@@ -8,12 +8,16 @@ offset=8
 line_len=9
 i = offset
 
+def print_hex_line(data : bytearray):
+    res = ' '.join(format(x, '02x') for x in data)
+    print("%s %s" % (res, data))
+
 buffer=bytearray()
 while i < len(sysex_data):
     #print(sysex_data[i])
     buffer.append(sysex_data[i])
     if (i - offset) % line_len == 0:
-        print(buffer)
+        print_hex_line(buffer)
     #    #print(str(buffer))
         buffer.clear()
     i += 1

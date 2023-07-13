@@ -13,8 +13,9 @@ With this project, I'm reverse engeneering the midi protocol that the L-20 talks
     - initial loading of track info and volume, solo, mute from device in one bulk sysex message
     - setting track colors (8 colors available like on the iPad App)
     - setting/receiving group volumes (headphone mixes), Note that changs are not persisted and are not saved in a Scene!
-* jquery bases client in the layout of the iPad App:
+* jquery based client similar to the iPad App:
 ![Screenshot1](doc/2023-07-08_screen1.png)
+![Screenshot1](doc/2023-07-13_screen2.png)
 
 * missing funtionality:
     - FIX server startup on Linux/RaspPi
@@ -43,7 +44,19 @@ pip3 install websockets
 cd server && python3 PyL20_osx.py
 ```
 
-(Note: for Linux/Windows there must be pairing enabled in the script)
+(Note: Currently for Linux/Windows there must be pairing enabled in the script)
+
+## JQuery client
+For the client there probably is a webserver required.
+You can use a simple python server:
+
+```bash
+cd jquery_client
+python3 ../tools/webserver.py
+```
+
+Now you can use the client by opening http://localhost:8001 in your browser.
+
 
 ## Contributing
 

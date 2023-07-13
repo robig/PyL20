@@ -100,28 +100,28 @@
     color: #232323;
     cursor: pointer;
 }
-.track .name.color1, #channel_settings .color1{
+.track .name.color1,  .color1{
     background: #fe0000;
 }
-.track .name.color2, #channel_settings .color2 {
+.track .name.color2,  .color2 {
     background: #fe8000;
 }
-.track .name.color3, #channel_settings .color3 {
+.track .name.color3,  .color3 {
     background: #ffff01;
 }
-.track .name.color4, #channel_settings .color4 {
+.track .name.color4,  .color4 {
     background: #01e500;
 }
-.track .name.color5, #channel_settings .color5 {
+.track .name.color5,  .color5 {
     background: #00aef2;
 }
-.track .name.color6, #channel_settings .color6 {
+.track .name.color6,  .color6 {
     background: #005fff;
 }
-.track .name.color7, #channel_settings .color7 {
+.track .name.color7,  .color7 {
     background: #7446ff;
 }
-#channel_settings .color0 {
+ .color0 {
     background: #808080;
 }
 .track .number {

@@ -36,7 +36,7 @@ class Ws:
         while websocket.open:
             try:
                 data = await websocket.recv()
-                logger.info(f"Data received: {data}")
+                logger.info(f"Websocket received: {data}")
                 try:
                     json_data = json.loads(data)
                     #await ws_process_request(json_data)

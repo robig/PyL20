@@ -77,3 +77,24 @@
     z-index: 51;
     cursor: pointer;
 }
+
+#colorpicker ul {
+    list-style-type: none;
+}
+#colorpicker li {
+    display: inline-block;
+    width: 20px; height: 20px;
+    border: solid #eaeaea 1px;
+    border-radius: 2px;
+    margin: 20px;
+    
+    cursor: pointer;
+}
+
+#colorpicker {
+    top: 30px;
+    left: 2px;
+    width: 210px;
+    height: 330px;
+    background: rgba(64, 64, 64, 0.94);
+}

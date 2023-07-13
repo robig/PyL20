@@ -15,6 +15,8 @@ def convert_to_bytes(data):
         control = get_CC_from_main_data(data)
         channel = int(data["channel"])
         value = int(data["value"])
+    elif data["context"] == "track-settings":
+        return create_sysex_track_rename(data)
 
     print("MIDI message built: ", [channel, control, value])
     return bytearray([channel + MIDI_CC_BASE, control, value])
@@ -90,11 +92,20 @@ def raw_decode_sysex_message(sysex_data : bytearray):
 
 
 def decode_sysex_message(sysex_data : bytearray):
-    sysex_type=sysex_data[1]
+    sysex_type=sysex_data[1:5]
     if sysex_type == MIDI_SYSEX_TRACK_INFO:
         return decode_sysex_track_info(sysex_data)
+    if sysex_type == MIDI_SYSEX_TRACK_COLOR:
+        return decode_sysex_track_color(sysex_data)
     print("Unknown SysEx message type: "+str(sysex_type))
-    return {"info": "unknown sysex message received"}
+    return None
+
+def decode_sysex_track_color(sysex_data : bytearray):
+    offset=6
+    chan = int(sysex_data[offset])
+    color = int(sysex_data[offset + 1])
+    print(f"Received track color change: {chan} -> {color}")
+    return { "command": {"function": "color", "channel": chan, "value": color} }
 
 def decode_sysex_track_info(sysex_data : bytearray):
     num_tracks=18
@@ -120,7 +131,7 @@ def decode_sysex_track_info(sysex_data : bytearray):
         f=offset + i*line_len
         t=f+line_len
         d=sysex_data[f:t]
-        command["tracks"].append({"number": i, "name": d.decode('utf8', errors='ignore').replace("\x00",""), "color": 0, "mute": 0, "solo": 0, "values":[]})
+        command["tracks"].append({"number": i, "name": d.decode('ascii', errors='ignore').replace("\x00",""), "color": 0, "mute": 0, "solo": 0, "values":[]})
 
     # two FX
     command["tracks"].append({"number":19, "name": "FX1", "mute": 0, "solo": 0, "value":0})
@@ -181,3 +192,27 @@ def decode_sysex_track_info(sysex_data : bytearray):
         command['monitor'].append(int(d))
 
     return { "command": command }
+
+def create_sysex_track_rename(data):
+    if data.get("name"):
+        value = bytes(data["name"], 'ascii')
+        chan = int(data["channel"])
+        sysex = bytearray(b"\xf0\x52\x00\x00\x31\x02\x02\x09\x00" + b"\x45\x45\x45\x65\x63\x74\x73\x00\x00\xf7")
+
+        print("Building sysex message... from", sysex)
+        sysex[6] = chan
+        print("+channel                      ", sysex)
+        for i in range(9, 18):
+            if len(value) > i-9:
+                sysex[i] = value[i-9]
+
+        print("sysex:", sysex)
+    if data.get("color"):
+        sysex = bytearray(b"\xF0\x52\x00\x00\x31\x03\x02\x06\x80\xF7")
+        chan = int(data["channel"])
+        color= int(data["color"])
+        sysex[6] = chan
+        sysex[7] = color 
+
+    return sysex
+

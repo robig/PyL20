@@ -187,6 +187,14 @@ message_callbacks.push({ // Monitor volume
 		main_data.monitor[cmd.channel].value=cmd.value;
 	}
 });
+message_callbacks.push({
+	"filter": function(cmd) {
+		return cmd.function=="color";
+	},
+	"action": function(cmd) {
+		track_data[cmd.channel].color = cmd.value;
+	}
+});
 
 
 
@@ -386,6 +394,11 @@ function onLoad(config) {
 		nameBind.addBinding(nameRead[0], "innerHTML");
 		nameBind.addBinding(nameWrite[0], "value");
 		colorBind.addClassBinding(settings.find(".color")[0], "x-value", "color");
+		settings.find(".color").on("click", e=>{
+			showModal("colorpicker");
+			var trk = $(e.target).parent().attr("x-track");
+			$("#colorpicker").attr("x-track", trk);
+		})
 		nameRead.on("click", e=>{
 			$(e.target).hide();
 			var nameWrite = $(e.target).parent().find("input.name");
@@ -397,7 +410,7 @@ function onLoad(config) {
 			console.log("hide input. trk="+trk);
 			track_data[trk].name=e.target.value;
 			
-			sendToServer({"context": "track", "name": track_data[trk].name, "channel": track_data[trk].channel});
+			
 		});
 		nameWrite.on('keypress',function(e) {
 			if(e.which == 13) {
@@ -405,6 +418,8 @@ function onLoad(config) {
 				var nameRead =nameWrite.parent().find("div.name");
 				nameRead.show();
 				nameWrite.hide();
+				var trk = $(e.target).parent().attr("x-track");
+				sendToServer({"context": "track-settings", "name": track_data[trk].name, "channel": track_data[trk].channel});
 			}
 		});
 

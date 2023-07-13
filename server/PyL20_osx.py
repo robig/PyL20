@@ -12,7 +12,7 @@ from _decode import *
 from _ws import *
 from _json_messages import *
 
-logging.basicConfig(format="%(asctime)s %(levelname)-8s %(message)s", level=logging.INFO)
+logging.basicConfig(format="%(asctime)s %(levelname)-5s %(module)-8s:%(lineno)d %(message)s", level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 device_status={
@@ -33,6 +33,9 @@ async def testme2(client):
 	#00000000: 5212 0080 80F0 5200 0031 0202 0900 4566  R.....R..1....Ef
 	#00000010: 6665 6374 7300 00                        fects..
 
+async def cmd_testme3():
+    await message_queue.put({"raw": b"\xf0\x52\x00\x00\x31\x02\x02\x09\x00\x45\x45\x45\x65\x63\x74\x73\x00\x00\xf7"})
+
 async def testme(client):
     print("Set Channel1")
     await client.write_gatt_char(BLE_MIDI_UUID, b"\x80\x80\xB0\x3C\x10")
@@ -49,16 +52,23 @@ async def testme(client):
 #// channel for B0
 
 async def send_midi_message_to_mixer(client, message):
-    if message.get("raw"):
-        await send_raw_message(client, message)
-        return
-    logger.info("Sending message to mixer: %s", str(message))
     if not client or not client.is_connected:
         logger.info("send_midi_message_to_mixer: Not connected")
         return
-    data = bytearray(DATA_PREFIX) + convert_to_bytes(message)
-    print("send_midi_message_to_mixer:", data)
     
+    data=bytearray()
+
+    if message.get("raw"):
+        await send_raw_message(client, message)
+        return
+    elif message.get("context") == "track-settings":
+        # with prefix here:
+        data = bytearray(DATA_PREFIX) + convert_to_bytes(message)
+    else:
+        logger.info("Sending message to mixer: %s", str(message))
+        data = bytearray(DATA_PREFIX) + convert_to_bytes(message)
+
+    print("send_midi_message_to_mixer:", data)
     await client.write_gatt_char(BLE_MIDI_UUID, data)
     d = " ".join(hex(n) for n in data)
     logger.info("Sent: %s", d)
@@ -84,26 +94,31 @@ async def ws_process_request(data):
     if data.get("cmd"):
         if data.get("cmd") == "track_info":
             await cmd_track_info()
+        if data.get("cmd") == "testme3":
+            await cmd_testme3()
         return
-    if data["context"] == "track" or data["context"] == "main":
+    if data["context"] == "track" or data["context"] == "main" or data["context"] == "track-settings":
         message_queue.put_nowait(data)
     True
 
 async def cmd_track_info():
     await message_queue.put({"raw": CMD_TRACK_INFO})
 
-async def cmd_track_info_join():
+async def on_sysex_message_end():
     buffer = b""
     while not response_queue.empty():
         msg = response_queue.get_nowait()
         buffer = buffer + msg
         await asyncio.sleep(0)
-    print("Data received: ", buffer)
-    message = decode_sysex_message(buffer[1:])
-    await ws_task.send_to_clients(message)
-
-    raw = raw_decode_sysex_message(b"\x00"+buffer)
-    await ws_task.send_to_clients({"command": {"raw": raw}})
+    print("SysEx Data received: ", buffer)
+    try:
+        message = decode_sysex_message(buffer[1:])
+        if message:
+            await ws_task.send_to_clients(message)
+    finally:
+        # also copy a raw version to make a diff on the client:
+        raw = raw_decode_sysex_message(b"\x00"+buffer)
+        await ws_task.send_to_clients({"command": {"raw": raw}})
 
 async def cmd_track_info_raw():
     buffer = b""
@@ -125,7 +140,6 @@ async def received_data(sender: BleakGATTCharacteristic, data: bytearray):
     except Exception as e:
         logger.error("No MIDI message or parse error: "+ str(e))
     
-    print("data2:",data[2]);
     if data[2] == MIDI_SYSEX_START:
         print("SysEx START")
     await response_queue.put(data[1:]) #skip 1st byte
@@ -133,7 +147,7 @@ async def received_data(sender: BleakGATTCharacteristic, data: bytearray):
     if data[-1:] == MIDI_SYSEX_END:
         print("SysEx END")
         try:
-            await cmd_track_info_join()
+            await on_sysex_message_end()
         except Exception as e:
             logger.error("decoding sysex message: %s", str(e))
         
@@ -177,7 +191,7 @@ async def ble_main(): #args: argparse.Namespace):
                     logger.info("start_notify for BLE MIDI done")
 
                     #await testme(client)
-                    #await testme2(client)
+                    await testme2(client)
                     device_status["connected"] = True
                     await on_connected_to_device(client)
 

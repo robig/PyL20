@@ -45,8 +45,11 @@ body.connected #topbar #connection { color: green; }
 	margin-left: 10%;
 	margin-right: 10%;
 	margin-top: 20px;
-	border: red solid 2px;
+	border: black solid 2px;
 	z-index: 100;
+}
+.close {
+	cursor: pointer;
 }
 #debug {
 	color: black;

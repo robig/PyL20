@@ -3,7 +3,7 @@
 #main .track {
 	position: relative;
 	left: 183px;
-	top: 275px;
+	top: 73px;
 	background-position-y: -225px;
 	height: 425px;
 }
@@ -49,6 +49,12 @@
 .track .button.rec {
 	top: 233px;
 }
+.track .button.rec.rec2 {
+	background: url('../img/button_red.png');
+}
+.track .button.rec.rec1 {
+	background: url('../img/button_green.png');
+}
 .track .button.mute {
 	top: 285px;
 	position: absolute;
@@ -92,27 +98,31 @@
 	position: relative;
 	top: 339px;
     color: #232323;
+    cursor: pointer;
 }
-.track .name.color1 {
+.track .name.color1, #channel_settings .color1{
     background: #fe0000;
 }
-.track .name.color2 {
+.track .name.color2, #channel_settings .color2 {
     background: #fe8000;
 }
-.track .name.color3 {
+.track .name.color3, #channel_settings .color3 {
     background: #ffff01;
 }
-.track .name.color4 {
+.track .name.color4, #channel_settings .color4 {
     background: #01e500;
 }
-.track .name.color5 {
+.track .name.color5, #channel_settings .color5 {
     background: #00aef2;
 }
-.track .name.color6 {
+.track .name.color6, #channel_settings .color6 {
     background: #005fff;
 }
-.track .name.color7 {
+.track .name.color7, #channel_settings .color7 {
     background: #7446ff;
+}
+#channel_settings .color0 {
+    background: #808080;
 }
 .track .number {
 	float: right;

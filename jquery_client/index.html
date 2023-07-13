@@ -7,7 +7,8 @@
 
     <link rel="stylesheet" type="text/css" href="assets/css/main.css">
     <link rel="stylesheet" type="text/css" href="assets/css/tracks.css">
-    <link rel="stylesheet" type="text/css" href="assets/css/roundslider.min.css">
+    <link rel="stylesheet" type="text/css" href="assets/css/menu.css">
+    <link rel="stylesheet" type="text/css" href="assets/css/fancyknob.css">
 	<script src="assets/js/jquery-3.4.1.min.js"></script>
   </head>
   <body>
@@ -18,13 +19,23 @@
     <div id="topbar">
         <div id="connection"></div>
     </div>
+    <div id="menu">
+        <ul>
+            <li class="connection"></li>
+            <li class="settings"></li>
+            <li class="channel"></li>
+        </ul>
+    </div>
+    <div id="settings" class="top overlay" style="display:none;">
+
+    </div>
+    <div id="channel_settings" class="top overlay" style="display:none;"></div>
 	
     <div id="mixer">
         <div id="track_container"></div>
 
         <div id="main">
             <div class="status"></div>
-
             <div class="monitor"></div>
             <div class="groups"></div>
             <div class="scenes"></div>
@@ -71,13 +82,24 @@
         </div>
     </template>
 
+    <template id="chan_settings_tpl">
+        <div class="tab">
+            <div class="name read"></div>
+            <input name="track_name" class="name write" style="display: none;" maxlength="9"></input>
+            <div class="color"></div>
+        </div>
+    </template>
 
     
-	</div>
+	<template id="monitor_tpl">
+        <input class="knob" type="range" min="0" max="118" value="0">
+    </template>
 
     <!-- inserting these scripts at the end to be able to use all the elements in the DOM -->
   	<script src="assets/js/binding.js"></script>
   	<script src="assets/js/main.js"></script>
-  	
+  	<script src="assets/js/menu.js"></script>
+    <script src="assets/js/jquery.scrollTo.min.js"></script>
+    <script src="assets/js/fancyknob.js"></script>
   </body>
 </html>

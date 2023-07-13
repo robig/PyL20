@@ -12,7 +12,8 @@ jQuery.getJSON( "config.json", function( data ) {
 );
 
 var track_data = [];
-var main_data = {"master": {"value": 0, "mute": 0, "solo": 0}}
+var monitorNames = ["A","B","C","D","E","F"];
+var main_data = {"master": {"value": 0, "mute": 0, "solo": 0}, "monitor": [{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0}]};
 var message_callbacks = [];
 var mouseDown=false;
 var track_selected = {"group": 0, "track": null};
@@ -91,7 +92,7 @@ message_callbacks.push({
 		console.log("got a Track Info Response")
 		if(cmd.tracks) {
 			cmd.tracks.forEach(t => {
-				console.log(t);
+				//console.log(t);
 				var i = t.number;
 				if(track_data[i]) {
 					track_data[i].name = t.name;
@@ -101,12 +102,21 @@ message_callbacks.push({
 					
 					if(t.values)
 						t.values.forEach((v,num) => {
-							console.log("channel "+num+"="+v);
+							//console.log("channel "+num+"="+v);
 							track_data[i].groups[num].value = v;
 						});
 					
 				}
 			});
+		}
+		if(cmd.master) {
+			main_data.master.value=cmd.master.value;
+			main_data.master.mute=cmd.master.mute;
+		}
+		if(cmd.monitor) {
+			for(var i=0; i<main_data.monitor.length && i<cmd.monitor.length;i++) {
+				main_data.monitor[i].value = cmd.monitor[i];
+			}
 		}
 	}
 });
@@ -116,6 +126,9 @@ message_callbacks.push({ // Track MUTE
 	},
 	"action": function(cmd) {
 		var trk=cmd.channel;
+		if(trk==18){
+			trk=17 // translate chan 18 to index 17
+		}
 		console.log("MUTE for track #"+trk);
 		track_data[trk].mute = cmd.value;
 	}
@@ -126,6 +139,9 @@ message_callbacks.push({ // Track SOLO
 	},
 	"action": function(cmd) {
 		var trk=cmd.channel;
+		if(trk==18){
+			trk=17 // translate chan 18 to index 17
+		}
 		console.log("SOLO for track #"+trk);
 		track_data[trk].solo = cmd.value;
 	}
@@ -136,8 +152,39 @@ message_callbacks.push({ // Track REC
 	},
 	"action": function(cmd) {
 		var trk=cmd.channel;
+		if(trk==18){
+			trk=17 // translate chan 18 to index 17
+		}
 		console.log("REC for track #"+trk);
 		track_data[trk].rec = cmd.value;
+	}
+});
+message_callbacks.push({ // MASTER mute
+	"filter": function(cmd) {
+		return cmd.context=="main" && cmd.function=="mute";
+	},
+	"action": function(cmd) {
+		console.log("MUTE for master track");
+		main_data.master.mute=cmd.value;
+	}
+});
+message_callbacks.push({ // MASTER rec
+	"filter": function(cmd) {
+		return cmd.context=="main" && cmd.function=="rec";
+	},
+	"action": function(cmd) {
+		console.log("REC for master track");
+		main_data.master.rec=cmd.value;
+	}
+});
+message_callbacks.push({ // Monitor volume
+	"filter": function(cmd) {
+		return cmd.context=="monitor" && cmd.function=="volume";
+	},
+	"action": function(cmd) {
+		var mon = monitorNames[cmd.channel];
+		console.log("monitor volume received: "+mon);
+		main_data.monitor[cmd.channel].value=cmd.value;
 	}
 });
 
@@ -167,6 +214,8 @@ function onLoad(config) {
 			track_selected.track = trk;
 			$(this).parent().find(".track").removeClass("selected");
 			$(this).addClass("selected");
+			$("#channel_settings .tab").removeClass("active");
+			$("#channel_settings .tab[x-track="+trk+"]").addClass("active");
 		});
 		t.find(".number").text(i+1);
 		if(i>=monoTrackCount) {
@@ -177,17 +226,17 @@ function onLoad(config) {
 		track_data[i] = {"name": "CH"+(i+1), "color": 0, "value": 0, "channel": i, "group": g, "mute": 0, "solo": 0, "rec": 0, "groups":[]};
 
 		var elName = t.find(".name")[0];
-		var b = new Binding({
+		var nameBind = new Binding({
 			object: track_data[i],
 			property: "name"
 		});
-		b.addBinding(elName, "innerHTML");
+		nameBind.addBinding(elName, "innerHTML");
 
-		var b = new Binding({
+		var colorBind = new Binding({
 			object: track_data[i],
 			property: "color"
 		});
-		b.addClassBinding(elName, "x-value", "color");
+		colorBind.addClassBinding(elName, "x-value", "color");
 
 		var groups = $('#main .groups');
 		var groupTemplate = $('template#group_tpl').html();
@@ -320,13 +369,48 @@ function onLoad(config) {
 		el.on("click", function(event) {
 			var trk = $(this).parent().attr("x-track");
 			var track = track_data[trk];
-			track.rec = (track.rec == 2 ? 0 : track.rec + 1 );
+			track.rec = (track.rec == 2 ? 0 : 2 );
 			sendToServer({"context": "track", "rec": track_data[trk].rec, "channel": track_data[trk].channel});
 		});
 		
+
+		////////////// CHANNEL SETTINGS ////////////
+		var channel_settings = $('#channel_settings');
+		var chanSettingsTemplate = $('template#chan_settings_tpl').html();
+		var settings = $(chanSettingsTemplate);
+		settings.attr("x-track", i);
+		settings.appendTo(channel_settings);
+		if(i==0) settings.addClass("active");
+		var nameRead = settings.find("div.name");
+		var nameWrite = settings.find("input.name");
+		nameBind.addBinding(nameRead[0], "innerHTML");
+		nameBind.addBinding(nameWrite[0], "value");
+		colorBind.addClassBinding(settings.find(".color")[0], "x-value", "color");
+		nameRead.on("click", e=>{
+			$(e.target).hide();
+			var nameWrite = $(e.target).parent().find("input.name");
+			nameWrite.show();
+			nameWrite.focus();
+		});
+		nameWrite.on("input", e=>{
+			var trk = $(e.target).parent().attr("x-track");
+			console.log("hide input. trk="+trk);
+			track_data[trk].name=e.target.value;
+			
+			sendToServer({"context": "track", "name": track_data[trk].name, "channel": track_data[trk].channel});
+		});
+		nameWrite.on('keypress',function(e) {
+			if(e.which == 13) {
+				var nameWrite=$(e.target);
+				var nameRead =nameWrite.parent().find("div.name");
+				nameRead.show();
+				nameWrite.hide();
+			}
+		});
+
 	}
 
-	// create master track binding:
+	/////////////// MASTER track ///////////////
 	var t = $(".master.track");
 	var b = new Binding({
 		object: main_data.master,
@@ -340,9 +424,44 @@ function onLoad(config) {
 		const now = Date.now();
 		if((now - lastChange) > 100 ) { //DEbounce
 			lastChange = Date.now();
-			sendToServer({"context": "main", "value": main_data.master.value, "channel": 0});
+			sendToServer({"context": "main", "value": main_data.master.value, "channel": 10});
 		}
 	});
+	// MUTE button
+	var el = t.find(".mute");
+	b = new Binding({
+		object: main_data.master,
+		property: "mute"
+	});
+	b.addClassBinding(el[0], "x-value", "value");
+	el.on("click", function(event) {
+		var track = main_data.master;
+		track.mute = (track.mute == 0 ? 1 : 0);
+		console.log("mute MASTER: "+track.mute);
+		sendToServer({"context": "main", "mute": track.mute, "channel": 10});
+	});
+
+	////////// MONITOR section ///////////
+	
+	for(var m=0; m<monitorNames.length;m++) {
+		var mon=monitorNames[m];
+		var monTemplate=$("#monitor_tpl").html();
+		var moni=$(monTemplate);
+		moni.appendTo($("#main .monitor"));
+		moni.addClass("monitor"+mon);
+
+		var b = new Binding({
+			object: main_data.monitor[m],
+			property: "value"
+		});
+		b.addBinding(moni[0], "value", "input");
+		b.setIdentifier(mon);
+		b.addCallback((val,mon)=>{
+			$(".monitor .monitor"+mon).trigger("change"); // required to update UI
+			console.log("would sendToServer: "+val);
+		});
+	}
+	$(".knob").fancyknob();
 
 	// connect to ws server:
 	connect();
@@ -421,18 +540,52 @@ function updateStatus(status) {
 	$('#main .status').text(status);
 }
 
+
+var b = new Binding({
+	object: track_selected,
+	property: "track"
+});
+b.addCallback(trk=>{
+	$(".track").removeClass("selected");
+	$(".track.track"+trk).addClass("selected");
+	$("#channel_settings .tab").removeClass("active");
+	$("#channel_settings .tab[x-track="+trk+"]").addClass("active");
+});
+$(window).keydown(function (e) {
+	console.log("Keydown: '"+e.keyCode+"'");
+	if(e.keyCode==39){ // right arrow ->
+		if(!track_selected.track) {
+			track_selected.track = 0;
+		}else{
+			track_selected.track ++;
+			$('.track_container').scrollTo($("track.track"+track_selected.track)[0], 0.5);
+		}
+		e.preventDefault();
+	}
+	if(e.keyCode==37){ // left arrow ->
+		if(!track_selected.track) {
+			track_selected.track = 0;
+		}else{
+			track_selected.track --;
+			if(track_selected.track<0){
+				track_selected.track=track_data.length-1;
+			}
+		}
+		e.preventDefault();
+	}
+});
 $(window).keypress(function (e) {
-  if (e.key === ' ' || e.key === 'Spacebar') {
-    // ' ' is standard, 'Spacebar' was used by IE9 and Firefox < 37
-    e.preventDefault()
-    console.log('Space pressed');
-	socket.send("SPACE");
-  }
+	console.log("Keypress: '"+e.key+"'");
+	if (e.key === ' ' || e.key === 'Spacebar') {
+		// ' ' is standard, 'Spacebar' was used by IE9 and Firefox < 37
+		e.preventDefault();
+		console.log('Space pressed');
+	}
 });
 
 function ok_message(txt) {
-	$('#formats').innerText=txt;
+	$('#ok_message').innerText=txt;
 }
 function error_message(txt) {
-	$('#formats').innerText=txt;
+	$('#error_message').innerText=txt;
 }

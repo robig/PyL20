@@ -1,8 +1,7 @@
 import argparse
 import asyncio
 import logging
-import websockets
-import json
+import platform
 from bleak import BleakScanner
 from bleak import BleakClient
 from bleak import BleakGATTCharacteristic
@@ -170,6 +169,7 @@ async def ble_main(): #args: argparse.Namespace):
                     logger.info("Model Number: {0}".format("".join(map(chr, model_number))))
 
                     # pairing not needed in MacOS:
+                    print("System: ", platform.system())
                     #paired = await client.pair(protection_level=2)
                     #print(f"Paired: {paired}")
 

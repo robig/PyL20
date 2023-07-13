@@ -7,17 +7,21 @@ function Binding(b) {
     this.valueGetter = function(){
         return _this.value;
     }
+    this.callbacks=[];
+    this.identifier=null;
     this.blocked=false;
     this.valueSetter = function(val){
         _this.value = val;
+        
         for (var i = 0; i < _this.elementBindings.length; i++) {
             var binding=_this.elementBindings[i]
             if(binding) {
-                v = val
+                var v = val;
                 if(binding.mapper) v = binding.mapper(val, binding.element[binding.attribute]);
                 binding.element[binding.attribute] = v
             }
         }
+        _this.callbacks.forEach(cb=> cb(val, _this.identifier));
     }
     this.addBinding = function(element, attribute, event){
         if(!element) return _this;
@@ -73,6 +77,14 @@ function Binding(b) {
         _this.elementBindings.push(binding);
         element[attribute] = _this.value;
         return _this;
+    }
+
+    this.addCallback = function(cb) {
+        _this.callbacks.push(cb)
+    };
+
+    this.setIdentifier = function(val) {
+        _this.identifier = val;
     }
 
     Object.defineProperty(b.object, b.property, {

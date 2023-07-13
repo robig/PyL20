@@ -100,3 +100,11 @@ body.connected #topbar #connection { color: green; }
 #main .groups .button.active {
 	background: url('../img/button_red.png');
 }
+
+
+#main .monitor {
+	position: relative;
+	left: 9px;
+	top:  64px;
+}
+

@@ -1,0 +1,79 @@
+#menu {
+    position: absolute;
+    top: 11px;
+    left: 128px;
+    width: 99%;
+    height: 32px;
+    z-index: 20;
+}
+
+#menu ul {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+    width: 100%;
+}
+
+#menu li {
+    display: inline-block;
+    cursor: pointer;
+}
+
+#menu li.connection {
+    width: 50px;
+    height: 32px;
+}
+
+#menu li.settings {
+    background: url('../img/menu_settings.png');
+    width: 96px;
+    height: 32px;
+}
+
+#menu li.channel {
+    background: url('../img/menu_channel_strip.png');
+    width: 129px;
+    height: 32px;
+}
+
+
+
+.top.overlay {
+    position: absolute;
+    left: 5px;
+    top: 60px;
+
+    width: 742px;
+    height: 220px;
+    z-index: 50;
+}
+
+#channel_settings {
+    background: url('../img/top_channel_strip.png');
+    width: 742px;
+    height: 220px;
+}
+
+.top.overlay .tab {
+    height: 220px;
+}
+
+#channel_settings .name {
+    position: relative;
+    top: 10px;
+    left: 22px;
+    width: 80px;
+    height: 15px;
+    z-index: 51;
+}
+#channel_settings .color {
+    position: relative;
+    top: 35px;
+    left: 40px;
+    width: 28px;
+    height: 28px;
+    border: solid black 1px;
+    border-radius: 2px;
+    z-index: 51;
+    cursor: pointer;
+}

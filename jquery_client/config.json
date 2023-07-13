@@ -17,5 +17,10 @@
         "count": 7,
         "names": ["M", "A", "B", "C", "D", "E", "F"],
         "startup": 0
-    }
+    },
+    "users": [
+        {"name": "Main", "icon": "", "restrictions": []},
+        {"name": "Bass", "icon": "bass.png", "restrictions": [], "groups": ["B"]}
+    ]
+    
 }

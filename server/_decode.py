@@ -22,14 +22,20 @@ def convert_to_bytes(data):
 # convert json dict to control value
 def get_CC_from_track_data(data):
     if "mute" in data:
+        if data["channel"]>15:
+            return MIDI_CC_TRACK_MUTE2
         return MIDI_CC_TRACK_MUTE
     if "solo" in data:
+        if data["channel"]>15:
+            return MIDI_CC_TRACK_SOLO2
         return MIDI_CC_TRACK_SOLO
     if "rec" in data:
+        if data["channel"]>15:
+            return MIDI_CC_TRACK_REC2
         return MIDI_CC_TRACK_REC
     
     group = int(data["group"])
-    if data["channel"]>15: #ther can only be 16 channels (0..15)
+    if data["channel"]>15: #there can only be 16 channels (0..15)
         print("channel16", data["channel"])
         data["channel"]=data["channel"]-16
         print("channel now", data["channel"])
@@ -98,7 +104,7 @@ def decode_sysex_track_info(sysex_data : bytearray):
     line_len=9
     i = offset
 
-    command = {"function":"track-info", "tracks": [], "master": {"value": 0}}
+    command = {"function":"track-info", "tracks": [], "master": {"value": 0, "mute": 0}, "monitor": []}
 
     buffer=bytearray()
     while i < len(sysex_data):
@@ -144,8 +150,15 @@ def decode_sysex_track_info(sysex_data : bytearray):
         d=sysex_data[f]
         command["tracks"][i]["solo"]=int(d)
 
+    # REC
+    offset = 21 * line_len
+    for i in range(0, num_tracks-1):
+        f=offset + i
+        d=sysex_data[f]
+        command["tracks"][i]["rec"]=int(d)
+
     # track volumes start on line 47
-    offset=47*line_len + 4
+    offset=47*line_len
     for g in range(0, num_groups):
         for i in range(0, num_tracks-1):
             f=offset + i
@@ -153,9 +166,18 @@ def decode_sysex_track_info(sysex_data : bytearray):
             command["tracks"][i]["values"].append(int(d))
         offset+=num_tracks
 
-    # master volume (at line 64 + 4byte)
-    offset = 47*line_len
+    # master mute
+    offset = 64*line_len + 2
+    d=sysex_data[offset]
+    command['master']['mute']=int(d)
+
+    # master volume (at line 64) followed by monitor volumes
+    offset = 64*line_len + 3
     d=sysex_data[offset]
     command['master']['value']=int(d)
+    for i in range(1, num_groups):
+        f=offset + i
+        d=sysex_data[f]
+        command['monitor'].append(int(d))
 
     return { "command": command }

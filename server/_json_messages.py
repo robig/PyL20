@@ -33,12 +33,27 @@ def create_json_message(message):
         if message.control == MIDI_CC_TRACK_MUTE:
             func="mute"
             context="track"
+        # track mute: (stereo tracks)
+        elif message.control == MIDI_CC_TRACK_MUTE2:
+            chan+=16;
+            func="mute"
+            context="track"
         # track solo
         elif message.control == MIDI_CC_TRACK_SOLO:
             func="solo"
             context="track"
+        # track solo (stereo tracks)
+        elif message.control == MIDI_CC_TRACK_SOLO2:
+            chan += 16
+            func="solo"
+            context="track"
         # track rec/play
         elif message.control == MIDI_CC_TRACK_REC:
+            func="rec"
+            context="track"
+        # track rec/play (stereo tracks)
+        elif message.control == MIDI_CC_TRACK_REC2:
+            chan += 16
             func="rec"
             context="track"
 
@@ -46,5 +61,39 @@ def create_json_message(message):
         elif message.control == MIDI_CC_MASTER_VOLUME and message.channel == MIDI_CHAN_MASTER_VOLUME:
             func="volume"
             context="main"
+        # master mute:
+        elif message.control == MIDI_CC_MASTER_MUTE and message.channel == MIDI_CHAN_MASTER_MUTE:
+            func="mute"
+            context="main"
+        elif message.control == MIDI_CC_MASTER_REC:
+            func="rec"
+            context="main"
+        
+        # FX channels
+        elif message.control == MIDI_CC_FX:
+            context="FX"
+            if message.channel == MIDI_CHAN_FX1:
+                func="volume"
+                group=1
+            elif message.channel == MIDI_CHAN_FX1:
+                func="volume"
+                group=2
+            elif message.channel == MIDI_CHAN_FX1_MUTE:
+                func="mute"
+                group=1
+            elif message.channel == MIDI_CHAN_FX2_MUTE:
+                func="mute"
+                group=2
+            elif message.channel == MIDI_CHAN_FX1_SOLO:
+                func="solo"
+                group=1
+            elif message.channel == MIDI_CHAN_FX2_SOLO:
+                func="solo"
+                group=2
+
+        # monitor volume:
+        elif message.control == MIDI_CC_MONITOR:
+            func="volume"
+            context="monitor"
 
     return { "command": { "type": message.type, "channel": chan, "control": message.control, "value": message.value, "function": func, "context": context, "group": group } }

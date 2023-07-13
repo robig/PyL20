@@ -5,13 +5,24 @@ With this project, I'm reverse engeneering the midi protocol that the L-20 talks
 ## Project status
 * python server is connecting to BLE characteristic, converting the MIDI data
 * currently supported MIDI commands:
-    - track volume for track 1-6 on all 7 groups (master and 6 headphone mixes)
+    - track volume for track 1-19/20 on all 7 groups (master and 6 headphone mixes)
     - toggle mute of a track
     - toggle solo of a track
-    - master fader volume
+    - master fader volume and mute
     - rec/play buttons
+    - initial loading of track info and volume, solo, mute from device in one bulk sysex message
+    - setting track colors (8 colors available like on the iPad App)
+    - setting/receiving group volumes (headphone mixes), Note that changs are not persisted and are not saved in a Scene!
 * jquery bases client in the layout of the iPad App:
 ![Screenshot1](doc/2023-07-08_screen1.png)
+
+* missing funtionality:
+    - FIX server startup on Linux/RaspPi
+    - FX tracks are missing yet
+    - Track renaming does currently not work
+    - Track settings like Send FX1/FX2, PAN, EQ
+    - Global EQ
+    - Recorder, Project name, folder, Overdub and tempo
 
 ## Installation
 
@@ -29,7 +40,7 @@ pip3 install websockets
 ## Start the server
 
 ```bash
-python3 PyL20_osx.py
+cd server && python3 PyL20_osx.py
 ```
 
 (Note: for Linux/Windows there must be pairing enabled in the script)

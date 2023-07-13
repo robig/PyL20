@@ -389,6 +389,7 @@ function onLoad(config) {
 		settings.attr("x-track", i);
 		settings.appendTo(channel_settings);
 		if(i==0) settings.addClass("active");
+		settings.find(".number").text(i+1);
 		var nameRead = settings.find("div.name");
 		var nameWrite = settings.find("input.name");
 		nameBind.addBinding(nameRead[0], "innerHTML");
@@ -423,7 +424,7 @@ function onLoad(config) {
 			}
 		});
 
-	}
+	}//End for track
 
 	/////////////// MASTER track ///////////////
 	var t = $(".master.track");

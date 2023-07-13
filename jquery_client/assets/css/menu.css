@@ -66,6 +66,13 @@
     height: 15px;
     z-index: 51;
 }
+#channel_settings .number {
+    position: absolute;
+    left: 22px;
+    top: 32px;
+    color: #565656;
+    font-size: 12px;
+}
 #channel_settings .color {
     position: relative;
     top: 35px;

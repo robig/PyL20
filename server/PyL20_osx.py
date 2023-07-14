@@ -1,3 +1,4 @@
+import traceback
 import argparse
 import asyncio
 import logging
@@ -97,7 +98,7 @@ async def ws_process_request(data):
         if data.get("cmd") == "testme3":
             await cmd_testme3()
         return
-    if data["context"] == "track" or data["context"] == "main" or data["context"] == "track-settings":
+    if data["context"] == "track" or data["context"] == "main" or data["context"] == "track-settings" or  data["context"] == "FXtrack":
         message_queue.put_nowait(data)
     True
 
@@ -110,14 +111,14 @@ async def on_sysex_message_end():
         msg = response_queue.get_nowait()
         buffer = buffer + msg
         await asyncio.sleep(0)
-    print("SysEx Data received: ", buffer)
+    #print("SysEx Data received: ", buffer)
     try:
         message = decode_sysex_message(buffer[1:])
         if message:
             await ws_task.send_to_clients(message)
     finally:
         # also copy a raw version to make a diff on the client:
-        raw = raw_decode_sysex_message(b"\x00"+buffer)
+        raw = raw_decode_sysex_message(buffer)
         await ws_task.send_to_clients({"command": {"raw": raw}})
 
 async def cmd_track_info_raw():
@@ -150,6 +151,7 @@ async def received_data(sender: BleakGATTCharacteristic, data: bytearray):
             await on_sysex_message_end()
         except Exception as e:
             logger.error("decoding sysex message: %s", str(e))
+            traceback.print_exc()
         
     
 

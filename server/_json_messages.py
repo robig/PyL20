@@ -70,26 +70,33 @@ def create_json_message(message):
             context="main"
         
         # FX channels
-        elif message.control == MIDI_CC_FX:
-            context="FX"
-            if message.channel == MIDI_CHAN_FX1:
+         # Volume for tracks 1-16:
+        for c in range(0, len(MIDI_CC_FX_GROUPS)):
+            grp = MIDI_CC_FX_GROUPS[c]
+            ch = MIDI_CHAN_FX_GROUPS[c]
+            ch2=ch+1
+            if message.control == grp and (message.channel == ch or message.channel == ch2): 
                 func="volume"
-                group=1
-            elif message.channel == MIDI_CHAN_FX1:
-                func="volume"
-                group=2
-            elif message.channel == MIDI_CHAN_FX1_MUTE:
+                context="FXtrack"
+                group=c
+                chan = chan - ch # client wants channel 0/1
+                break
+        if message.control == MIDI_CC_FX:
+            context="FXtrack"
+            if message.channel == MIDI_CHAN_FX1_MUTE:
                 func="mute"
-                group=1
+                chan=0
             elif message.channel == MIDI_CHAN_FX2_MUTE:
                 func="mute"
-                group=2
+                chan=1
             elif message.channel == MIDI_CHAN_FX1_SOLO:
                 func="solo"
-                group=1
+                chan=0
             elif message.channel == MIDI_CHAN_FX2_SOLO:
                 func="solo"
-                group=2
+                chan=1
+        elif message.control == MIDI_CC_FX_EFFECT:
+            context="FX"
 
         # monitor volume:
         elif message.control == MIDI_CC_MONITOR:

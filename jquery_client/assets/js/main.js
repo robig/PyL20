@@ -17,6 +17,7 @@ var main_data = {"master": {"value": 0, "mute": 0, "solo": 0}, "monitor": [{"val
 var message_callbacks = [];
 var mouseDown=false;
 var track_selected = {"group": 0, "track": null};
+var fx_track_data = [];
 
 //////////// for debugging/decoding ////////////////
 function showDebug(data) {
@@ -36,10 +37,10 @@ function printDiff(o1, o2) {
 		if(arr1[i] != arr2[i]) {
 			d="+";
 			diffLines.push(lineNumber);
-			var oldline=lineNumber+" -"+arr1[i];
+			var oldline="-"+arr1[i];
 			ret.push(oldline+"\n");
 		}
-		var line = lineNumber+" "+d + arr2[i];
+		var line = d + arr2[i];
 		ret.push(line+"\n");
 	}
 	//$("#debug").html(ret);
@@ -195,6 +196,30 @@ message_callbacks.push({
 		track_data[cmd.channel].color = cmd.value;
 	}
 });
+message_callbacks.push({
+	"filter": function(cmd) {
+		return cmd.context == "FXtrack" && cmd.function != "volume";
+	},
+	"action": function(cmd) {
+		if(cmd.function == "mute" && cmd.channel<fx_track_data.length)
+			fx_track_data[cmd.channel].mute = cmd.value;
+		if(cmd.function == "solo" && cmd.channel<fx_track_data.length)
+			fx_track_data[cmd.channel].solo = cmd.value;
+	}
+});
+message_callbacks.push(
+	{ // FXTrack Volume chages
+		"filter": function(cmd) {
+			return cmd.context=="FXtrack" && cmd.function == "volume" && !mouseDown;
+		},
+		"action": function(cmd) {
+			if(cmd.group >= 0 && cmd.group < 8) {
+				var g = cmd.group;
+				fx_track_data[cmd.channel].groups[g].value=cmd.value;
+			}
+		}
+	}
+);
 
 
 
@@ -202,7 +227,7 @@ function onLoad(config) {
 	var monoTrackCount = config.tracks.mono.count;
 	var stereoTrackCount = config.tracks.stereo.count;
 	var fxTrackCount = config.tracks.fx.count;
-	var trackCount = monoTrackCount + stereoTrackCount;
+	var trackCount = monoTrackCount + stereoTrackCount+fxTrackCount;
 	var groupCount = config.groups.count;
 	var groupNames = config.groups.names;
 	//var group=0; // todo 0=master group
@@ -214,7 +239,7 @@ function onLoad(config) {
 	for(var i=0; i<trackCount; i++) {
 		var t = $(trackTemplate);
 		t.appendTo(mixer);
-		t.addClass("track"+(i+1));
+		t.addClass("track"+i);
 		t.find(".name").text("CH"+(i+1));
 		t.attr("x-track", i);
 		t.on("click", function() {
@@ -225,13 +250,27 @@ function onLoad(config) {
 			$("#channel_settings .tab").removeClass("active");
 			$("#channel_settings .tab[x-track="+trk+"]").addClass("active");
 		});
+		track_data[i] = {"number": ""+i, "name": "CH"+(i+1), "color": 0, "value": 0, "channel": i, "group": g, "mute": 0, "solo": 0, "rec": 0, "groups":[]};
+
 		t.find(".number").text(i+1);
-		if(i>=monoTrackCount) {
+		if(i>=monoTrackCount && i<monoTrackCount+stereoTrackCount) {
 			var tc = 1+monoTrackCount+(i-monoTrackCount)*2;
 			t.find(".number").text(tc+"/"+(tc+1));
+			track_data[i].name=tc+"/"+(tc+1);
+			track_data[i].number=tc+"/"+(tc+1);
+			t.addClass("stereo");
 		}
-
-		track_data[i] = {"name": "CH"+(i+1), "color": 0, "value": 0, "channel": i, "group": g, "mute": 0, "solo": 0, "rec": 0, "groups":[]};
+		var isFX = i>=monoTrackCount+stereoTrackCount;
+		if(isFX) {
+			var tc = "FX" + (i-monoTrackCount-stereoTrackCount+1);
+			t.find(".number").text(tc);
+			track_data[i].name=tc;
+			track_data[i].number=tc;
+			track_data[i].channel = i-monoTrackCount-stereoTrackCount;
+			fx_track_data.push(track_data[i]);
+			t.addClass("FX");
+			t.addClass("stereo");
+		}
 
 		var elName = t.find(".name")[0];
 		var nameBind = new Binding({
@@ -294,10 +333,11 @@ function onLoad(config) {
 				//console.log($(this));
 				var gid = $(this).attr("x-group");
 				var trk = $(this).attr("x-track");
+				var isFX = trk>=monoTrackCount+stereoTrackCount;
 				const now = Date.now();
 				if((now - lastChange) > 100 ) { //DEbounce
 					lastChange = Date.now();
-					sendToServer({"context": "track", "value": track_data[trk].groups[gid].value, "group": gid, "channel": track_data[trk].channel});
+					sendToServer({"context": (isFX ? "FX" : "")+"track", "value": track_data[trk].groups[gid].value, "group": gid, "channel": track_data[trk].channel});
 				}
 			});
 			$(elSlider).on('mousedown', function() {mouseDown=true;});
@@ -305,15 +345,17 @@ function onLoad(config) {
 				mouseDown=false;
 				var gid = $(this).attr("x-group");
 				var trk = $(this).attr("x-track");
-				sendToServer({"context": "track", "value": track_data[trk].groups[gid].value, "group": gid, "channel": track_data[trk].channel});
+				var isFX = trk>=monoTrackCount+stereoTrackCount;
+				sendToServer({"context": (isFX ? "FX" : "")+"track", "value": track_data[trk].groups[gid].value, "group": gid, "channel": track_data[trk].channel});
 			});
 			$(elSlider).bind('mousewheel DOMMouseScroll', function(e) {
 				//console.log(e.originalEvent);
 				console.log(e.originalEvent.detail);
 				var gid = $(this).attr("x-group");
 				var trk = $(this).attr("x-track");
+				var isFX = trk>=monoTrackCount+stereoTrackCount;
 				var val=parseInt($(this).val()) - e.originalEvent.detail;
-				sendToServer({"context": "track", "value": val, "group": gid, "channel": track_data[trk].channel});
+				sendToServer({"context": (isFX ? "FX" : "")+"track", "value": val, "group": gid, "channel": track_data[trk].channel});
 			});
 
 			var elValue= tab.find(".value")[0];
@@ -341,10 +383,11 @@ function onLoad(config) {
 		b.addClassBinding(el[0], "x-value", "value");
 		el.on("click", function(event) {
 			var trk = $(this).parent().attr("x-track");
+			var isFX = trk>=monoTrackCount+stereoTrackCount;
 			var track = track_data[trk];
 			track.mute = (track.mute == 0 ? 1 : 0);
 			console.log("mute: "+track.mute);
-			sendToServer({"context": "track", "mute": track_data[trk].mute, "channel": track_data[trk].channel});
+			sendToServer({"context": (isFX ? "FX" : "")+"track", "mute": track_data[trk].mute, "channel": track_data[trk].channel});
 		});
 
 		// SOLO button
@@ -356,6 +399,7 @@ function onLoad(config) {
 		b.addClassBinding(el[0], "x-solo", "solo");
 		el.on("click", function(event) {
 			var trk = $(this).parent().attr("x-track");
+			var isFX = trk>=monoTrackCount+stereoTrackCount;
 			var track = track_data[trk];
 			track.solo = (track.solo == 0 ? 1 : 0);
 			if(track.solo==1) {
@@ -363,24 +407,25 @@ function onLoad(config) {
 			}else{
 				$(this).parent().removeClass("solo");
 			}
-			sendToServer({"context": "track", "solo": track_data[trk].solo, "channel": track_data[trk].channel});
+			sendToServer({"context": (isFX ? "FX" : "")+"track", "solo": track_data[trk].solo, "channel": track_data[trk].channel});
 		});
 		
 
 		// REC/PLAY button
-		el = t.find(".rec");
-		b = new Binding({
-			object: track_data[i],
-			property: "rec"
-		});
-		b.addClassBinding(el[0], "x-rec", "rec");
-		el.on("click", function(event) {
-			var trk = $(this).parent().attr("x-track");
-			var track = track_data[trk];
-			track.rec = (track.rec == 2 ? 0 : 2 );
-			sendToServer({"context": "track", "rec": track_data[trk].rec, "channel": track_data[trk].channel});
-		});
-		
+		if(!isFX) {
+			el = t.find(".rec");
+			b = new Binding({
+				object: track_data[i],
+				property: "rec"
+			});
+			b.addClassBinding(el[0], "x-rec", "rec");
+			el.on("click", function(event) {
+				var trk = $(this).parent().attr("x-track");
+				var track = track_data[trk];
+				track.rec = (track.rec == 2 ? 0 : 2 );
+				sendToServer({"context": "track", "rec": track_data[trk].rec, "channel": track_data[trk].channel});
+			});
+		}
 
 		////////////// CHANNEL SETTINGS ////////////
 		var channel_settings = $('#channel_settings');
@@ -389,7 +434,7 @@ function onLoad(config) {
 		settings.attr("x-track", i);
 		settings.appendTo(channel_settings);
 		if(i==0) settings.addClass("active");
-		settings.find(".number").text(i+1);
+		settings.find(".number").text(track_data[i].number);
 		var nameRead = settings.find("div.name");
 		var nameWrite = settings.find("input.name");
 		nameBind.addBinding(nameRead[0], "innerHTML");
@@ -477,10 +522,13 @@ function onLoad(config) {
 			console.log("would sendToServer: "+val);
 		});
 	}
-	$(".knob").fancyknob();
 
 	// connect to ws server:
 	connect();
+}
+
+document.body.onload = function() {
+	$(".knob").fancyknob();
 }
 
 var lastChange = 0;

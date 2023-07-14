@@ -10,6 +10,10 @@ def convert_to_bytes(data):
         control = get_CC_from_track_data(data)
         value = get_Value_from_track_data(control, data)
         channel = int(data["channel"])
+    elif data["context"] == "FXtrack":
+        control = get_CC_from_FXtrack_data(data)
+        value = get_Value_from_track_data(control, data)
+        channel = int(data["channel"])
     elif data["context"] == "main":
         print("main")
         control = get_CC_from_main_data(data)
@@ -19,6 +23,8 @@ def convert_to_bytes(data):
         return create_sysex_track_rename(data)
 
     print("MIDI message built: ", [channel, control, value])
+    if channel == 0 and control == 0:
+        raise Exception("Invalid MIDI")
     return bytearray([channel + MIDI_CC_BASE, control, value])
 
 # convert json dict to control value
@@ -48,6 +54,32 @@ def get_CC_from_track_data(data):
             return MIDI_CC_TRACK_GROUPS[group]
     return 0
 
+# convert json dict to control value
+def get_CC_from_FXtrack_data(data):
+    # all channel data use the same CC:
+    cc=MIDI_CC_FX
+    if "mute" in data:
+        data["channel"] = data["channel"] + MIDI_CHAN_FX1_MUTE
+        return cc
+    if "solo" in data:
+        data["channel"] = data["channel"] + MIDI_CHAN_FX1_SOLO
+        return cc
+    
+    if "effect" in data:
+        #keep channel 0/1
+        return MIDI_CC_FX_EFFECT
+    
+    # channel volume
+    group = int(data["group"])
+    if group >= 0 and group < len(MIDI_CHAN_FX_GROUPS):
+        data["channel"] = data["channel"] + MIDI_CHAN_FX_GROUPS[group]
+    if group >= 0 and group < len(MIDI_CC_FX_GROUPS):
+        return  MIDI_CC_FX_GROUPS[group]
+
+    # master channel
+    data["channel"] = data["channel"] + MIDI_CHAN_FX1 # channel 0/1 -> 12/13
+    return cc
+
 # convert json dict (and control value) to value value
 def get_Value_from_track_data(cc, data):
     value = int(data.get("value", "0"))
@@ -72,9 +104,9 @@ def print_hex_line(data : bytearray):
     res = ' '.join(format(x, '02x') for x in data)
     print("%s %s" % (res, data))
 
-def get_hex_line(data : bytearray):
+def get_hex_line(line: int, data : bytearray):
     res = ' '.join(format(x, '02x') for x in data)
-    return f"{res} {data}"
+    return f"{line:03d} {res} {data}"
 
 def raw_decode_sysex_message(sysex_data : bytearray):
     offset=9
@@ -85,7 +117,7 @@ def raw_decode_sysex_message(sysex_data : bytearray):
     while i < len(sysex_data):
         buffer.append(sysex_data[i])
         if i>0 and (i) % line_len == 0:
-            ret += get_hex_line(buffer) + "\n"
+            ret += get_hex_line(i, buffer) + "\n"
             buffer.clear()
         i += 1
     return ret
@@ -122,7 +154,7 @@ def decode_sysex_track_info(sysex_data : bytearray):
         #print(sysex_data[i])
         buffer.append(sysex_data[i])
         if i>offset and (i - offset) % line_len == 0:
-            print("%d %s" % (i,get_hex_line(buffer) ))
+            print(get_hex_line(i, buffer) )
             buffer.clear()
         i += 1
 
@@ -134,12 +166,12 @@ def decode_sysex_track_info(sysex_data : bytearray):
         command["tracks"].append({"number": i, "name": d.decode('ascii', errors='ignore').replace("\x00",""), "color": 0, "mute": 0, "solo": 0, "values":[]})
 
     # two FX
-    command["tracks"].append({"number":19, "name": "FX1", "mute": 0, "solo": 0, "value":0})
-    command["tracks"].append({"number":20, "name": "FX2", "mute": 0, "solo": 0, "value":0})
+    command["tracks"].append({"number":18, "name": "FX1", "mute": 0, "solo": 0, "values":[]})
+    command["tracks"].append({"number":19, "name": "FX2", "mute": 0, "solo": 0, "values":[]})
 
     # track colors:
     offset += num_tracks*line_len #18 namedd tracks
-    for i in range(0, num_tracks-1):
+    for i in range(0, num_tracks):
         f=offset + i
         d=sysex_data[f]
         command["tracks"][i]["color"]=int(d)
@@ -149,14 +181,14 @@ def decode_sysex_track_info(sysex_data : bytearray):
 
     # mute
     offset += num_tracks #18 tracks
-    for i in range(0, num_tracks+fx_tracks-1):
+    for i in range(0, num_tracks):
         f=offset + i
         d=sysex_data[f]
         command["tracks"][i]["mute"]=int(d)
 
     # solo
-    offset += num_tracks+fx_tracks
-    for i in range(0, num_tracks+fx_tracks-1):
+    offset += num_tracks
+    for i in range(0, num_tracks+fx_tracks):
         f=offset + i
         d=sysex_data[f]
         command["tracks"][i]["solo"]=int(d)
@@ -171,11 +203,36 @@ def decode_sysex_track_info(sysex_data : bytearray):
     # track volumes start on line 47
     offset=47*line_len
     for g in range(0, num_groups):
-        for i in range(0, num_tracks-1):
+        for i in range(0, num_tracks):
             f=offset + i
             d=sysex_data[f]
+            #print("track g=",g," i=", i, " d=", int(d))
             command["tracks"][i]["values"].append(int(d))
         offset+=num_tracks
+
+    # FX mute
+    offset = 62*line_len+1
+    for i in range(2):
+        ti=num_tracks+i
+        f=offset + i
+        d=sysex_data[f]
+        command["tracks"][ti]["mute"]= int(d)
+    # FX solo
+    offset = 62*line_len+3
+    for i in range(2):
+        ti=num_tracks+i
+        f=offset + i
+        d=sysex_data[f]
+        command["tracks"][ti]["solo"]= int(d)
+    # FX levels on line 62
+    offset = 62*line_len + 5
+    for g in range(0, num_groups):
+        for i in range(2):
+            ti=num_tracks+i
+            f=offset + 2*g + i
+            d=sysex_data[f]
+            #print("FX",ti, "g=",g," i=", i, " d=", int(d), " offsets", 2*g+i, " offset=",f)
+            command["tracks"][ti]["values"].append(int(d))
 
     # master mute
     offset = 64*line_len + 2

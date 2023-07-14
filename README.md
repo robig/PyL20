@@ -9,6 +9,7 @@ With this project, I'm reverse engeneering the midi protocol that the L-20 talks
     - toggle mute of a track
     - toggle solo of a track
     - master fader volume and mute
+    - EFX tracks volume, mute and solo
     - rec/play buttons
     - initial loading of track info and volume, solo, mute from device in one bulk sysex message
     - setting track colors (8 colors available like on the iPad App)
@@ -19,11 +20,12 @@ With this project, I'm reverse engeneering the midi protocol that the L-20 talks
 
 * missing funtionality:
     - FIX server startup on Linux/RaspPi
-    - FX tracks are missing yet
+    - FX parameters are missing yet
     - Track renaming does currently not work
     - Track settings like Send FX1/FX2, PAN, EQ
     - Global EQ
     - Recorder, Project name, folder, Overdub and tempo
+    - Level meters and signal indicators
 
 ## Installation
 

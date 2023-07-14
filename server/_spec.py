@@ -36,9 +36,24 @@ MIDI_CC_TRACK_FX1=52        # value 0-60
 MIDI_CC_TRACK_FX2=54        # value 0-60
 MIDI_CC_MONITOR=83          # value 0-118
 
-MIDI_CC_FX=80 # channel 12 + 13, value 0-120
+MIDI_CC_FX=80               # [M] channel 12/13, value 0-120
+MIDI_CC_FX_A=81             # [A] channel 0/1
+MIDI_CC_FX_B=81             # [B] channel 4/5 
+MIDI_CC_FX_C=81             # [C] channel 8/9 
+MIDI_CC_FX_D=81             # [D] channel 12/13 
+MIDI_CC_FX_E=82             # [D] channel 0/1 
+MIDI_CC_FX_F=82             # [B] channel 4/5 
+MIDI_CC_FX_GROUPS=[MIDI_CC_FX, MIDI_CC_FX_A, MIDI_CC_FX_B, MIDI_CC_FX_C, MIDI_CC_FX_D, MIDI_CC_FX_E, MIDI_CC_FX_F]
 MIDI_CHAN_FX1=12
 MIDI_CHAN_FX2=13
+MIDI_CHAN_FX_A=0
+MIDI_CHAN_FX_B=4
+MIDI_CHAN_FX_C=8
+MIDI_CHAN_FX_D=12
+MIDI_CHAN_FX_E=0
+MIDI_CHAN_FX_F=4
+MIDI_CHAN_FX_GROUPS=[MIDI_CHAN_FX1, MIDI_CHAN_FX_A, MIDI_CHAN_FX_B, MIDI_CHAN_FX_C, MIDI_CHAN_FX_D, MIDI_CHAN_FX_E, MIDI_CHAN_FX_F]
+
 MIDI_CHAN_FX1_MUTE=4 # mute FX1: CC=80 channel=4 value=0/1
 MIDI_CHAN_FX2_MUTE=5 # mute FX2: CC=80 channel=5 value=0/1
 MIDI_CHAN_FX1_SOLO=8 # solo FX1: CC=80 channel=8 value=0/1

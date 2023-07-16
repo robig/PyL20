@@ -20,12 +20,18 @@ def convert_to_bytes(data):
         channel = int(data["channel"])
         value = int(data["value"])
     elif data["context"] == "track-settings":
-        return create_sysex_track_rename(data)
+        return create_sysex_track_settings(data)
 
     print("MIDI message built: ", [channel, control, value])
     if channel == 0 and control == 0:
         raise Exception("Invalid MIDI")
     return bytearray([channel + MIDI_CC_BASE, control, value])
+
+def need_sysex_end_message(data):
+    if data["context"] == "track-settings" and data.get("name"):
+        return True
+
+    return False
 
 # convert json dict to control value
 def get_CC_from_track_data(data):
@@ -127,17 +133,30 @@ def decode_sysex_message(sysex_data : bytearray):
     sysex_type=sysex_data[1:5]
     if sysex_type == MIDI_SYSEX_TRACK_INFO:
         return decode_sysex_track_info(sysex_data)
+    sysex_type=sysex_data[1:6]
     if sysex_type == MIDI_SYSEX_TRACK_COLOR:
         return decode_sysex_track_color(sysex_data)
+    if sysex_type == MIDI_SYSEX_TRACK_RENAME:
+        return decode_sysex_track_rename(sysex_data)
     print("Unknown SysEx message type: "+str(sysex_type))
     return None
 
 def decode_sysex_track_color(sysex_data : bytearray):
     offset=6
-    chan = int(sysex_data[offset])
+    chan = int(sysex_data[offset]) -1
     color = int(sysex_data[offset + 1])
-    print(f"Received track color change: {chan} -> {color}")
+    print(f"Received track color change: #{chan}: color={color}")
     return { "command": {"function": "color", "channel": chan, "value": color} }
+
+def decode_sysex_track_rename(sysex_data : bytearray):
+    offset=6
+    chan = int(sysex_data[offset]) -1
+    offset+=1
+    end=offset+8
+    d = sysex_data[offset:end]
+    newname=d.decode('ascii', errors='ignore').replace("\x00","")
+    print(f"Received track rename: #{chan}: name={newname}")
+    return { "command": {"function": "color", "channel": chan, "name": newname} }
 
 def decode_sysex_track_info(sysex_data : bytearray):
     num_tracks=18
@@ -250,11 +269,11 @@ def decode_sysex_track_info(sysex_data : bytearray):
 
     return { "command": command }
 
-def create_sysex_track_rename(data):
+def create_sysex_track_settings(data):
     if data.get("name"):
         value = bytes(data["name"], 'ascii')
-        chan = int(data["channel"])
-        sysex = bytearray(b"\xf0\x52\x00\x00\x31\x02\x02\x09\x00" + b"\x45\x45\x45\x65\x63\x74\x73\x00\x00\xf7")
+        chan = int(data["channel"]) + 1
+        sysex = bytearray(b"\xF0\x52\x00\x00\x31\x02\x02\x09\x00" + b"\x45\x45\x45\x65\x63\x74\x73\x00\x00")
 
         print("Building sysex message... from", sysex)
         sysex[6] = chan
@@ -263,10 +282,10 @@ def create_sysex_track_rename(data):
             if len(value) > i-9:
                 sysex[i] = value[i-9]
 
-        print("sysex:", sysex)
+        print("sysex:                        ", sysex)
     if data.get("color"):
         sysex = bytearray(b"\xF0\x52\x00\x00\x31\x03\x02\x06\x80\xF7")
-        chan = int(data["channel"])
+        chan = int(data["channel"])+1
         color= int(data["color"])
         sysex[6] = chan
         sysex[7] = color 

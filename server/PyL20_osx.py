@@ -7,6 +7,9 @@ from bleak import BleakScanner
 from bleak import BleakClient
 from bleak import BleakGATTCharacteristic
 from mido import Message
+import threading
+import http.server
+import socketserver
 
 from _spec import *
 from _decode import *
@@ -73,6 +76,8 @@ async def send_midi_message_to_mixer(client, message):
     await client.write_gatt_char(BLE_MIDI_UUID, data)
     d = " ".join(hex(n) for n in data)
     logger.info("Sent: %s", d)
+    if need_sysex_end_message(message):
+        await client.write_gatt_char(BLE_MIDI_UUID, bytearray(DATA_PREFIX) + bytearray(MIDI_SYSEX_END))
 
 async def send_raw_message(client, message):
     d = " ".join(hex(n) for n in message.get("raw"))
@@ -193,7 +198,7 @@ async def ble_main(): #args: argparse.Namespace):
                     logger.info("start_notify for BLE MIDI done")
 
                     #await testme(client)
-                    await testme2(client)
+                    #await testme2(client)
                     device_status["connected"] = True
                     await on_connected_to_device(client)
 
@@ -227,8 +232,13 @@ async def ble_main(): #args: argparse.Namespace):
                 msg = await message_queue.get()
                 if is_cmd_connect(msg):
                     do_connect = True
-                
 
+def web_main(PORT : int):
+    Handler = http.server.SimpleHTTPRequestHandler
+    with socketserver.TCPServer(("", PORT), Handler) as httpd:
+        print("serving at port", PORT)
+    
+        httpd.serve_forever()
 
 async def main(args: argparse.Namespace):
     #ws = Ws(args, ws_process_request)
@@ -236,11 +246,21 @@ async def main(args: argparse.Namespace):
     ws_task.set_callback(ws_process_request)
     ws_task.set_device_status_obj(device_status)
 
+    #if web_support and args.w > 0:
+    if int(args.w) > 0:
+        #    tasks.append(task3)
+        t=threading.Thread(target=web_main, args=[int(args.w)])
+        t.start()
+
     task1 = asyncio.create_task(ws_task.run())
     task2 = asyncio.create_task(ble_main())
-    #task3 = asyncio.create_task(func3()) todo webserver
+    #task3 = asyncio.create_task(web_main(args)) # internal webserver
 
-    await asyncio.wait([task1, task2])
+    tasks=[task1, task2]
+
+  
+
+    await asyncio.wait(tasks)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -251,6 +271,7 @@ if __name__ == "__main__":
         help="when true use Bluetooth address instead of UUID on macOS",
     )
     parser.add_argument('--port', required=False, default="5885", help="websocket port")
+    parser.add_argument('-w', required=False, default=0, help="Enable internal webserver by defining a port")
 
     args = parser.parse_args()
 

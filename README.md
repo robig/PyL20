@@ -13,6 +13,7 @@ With this project, I'm reverse engeneering the midi protocol that the L-20 talks
     - rec/play buttons
     - initial loading of track info and volume, solo, mute from device in one bulk sysex message
     - setting track colors (8 colors available like on the iPad App)
+    - change track names
     - setting/receiving group volumes (headphone mixes), Note that changs are not persisted and are not saved in a Scene!
 * jquery based client similar to the iPad App:
 ![Screenshot1](doc/2023-07-08_screen1.png)
@@ -20,12 +21,11 @@ With this project, I'm reverse engeneering the midi protocol that the L-20 talks
 
 * missing funtionality:
     - FIX server startup on Linux/RaspPi
-    - FX parameters are missing yet
-    - Track renaming does currently not work
+    - FX channel parameters are missing yet
     - Track settings like Send FX1/FX2, PAN, EQ
     - Global EQ
     - Recorder, Project name, folder, Overdub and tempo
-    - Level meters and signal indicators
+    - Level meters and signal indicators (not sent via MIDI?!)
 
 ## Installation
 

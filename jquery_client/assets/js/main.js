@@ -519,7 +519,7 @@ function onLoad(config) {
 		b.setIdentifier(mon);
 		b.addCallback((val,mon)=>{
 			$(".monitor .monitor"+mon).trigger("change"); // required to update UI
-			console.log("would sendToServer: "+val);
+			console.log("monitor callback: would sendToServer: "+val);
 		});
 	}
 

@@ -25,13 +25,15 @@
                 rotation = 0,
                 lastDeg = 0,
                 decimal_digits=0,
+                blocked=false,
                 x_str = step.toString().split('.')[1];
                 if(x_str!==undefined){
                    decimal_digits = x_str.length;
                 }
             $(this).next().find(".knoblabel").html($(this).data("label"));
             $(this).on("input change", function() {
-              $(this).next().find(".knobvalue").html($(this).val());
+                //console.log("fancyknob: input/change "+$(this).val());
+                $(this).next().find(".knobvalue").html($(this).val());
                 if (minval < 0) {
                     if (parseInt($(this).val()) < 0) {
                         var i = Math.abs(minval) + parseInt($(this).val());
@@ -63,7 +65,7 @@
                             } else if (t >= maxval) {
                                 t = maxval;
                             }
-                            rangeelem.val(t).trigger('change');
+                            rangeelem.val(t).trigger('input');
                         }
                         if (angle >= maxangle) {
                             angle = maxangle;
@@ -82,7 +84,7 @@
                             } else if (t >= maxval) {
                                 t = maxval;
                             }
-                            rangeelem.val(t).trigger('change');
+                            rangeelem.val(t).trigger('input');
                         }
                         if (angle <= minangle) {
                             angle = minangle;
@@ -93,25 +95,36 @@
 
             }
             $(this).next().bind('DOMMouseScroll', function(e) {
-
+                rangeelem.trigger("mousedown");
                 if (e.originalEvent.detail > 0) {
                     moveKnob('down', $(this), false);
                 } else {
                     moveKnob('up', $(this), false);
                 }
+                rangeelem.trigger("mouseup");
                 return false;
             });
             $(this).next().bind('mousewheel', function(e) {
+                rangeelem.trigger("mousedown");
                 if (e.originalEvent.wheelDelta < 0) {
                     moveKnob('down', $(this));
                 } else {
                     moveKnob('up', $(this));
                 }
+                rangeelem.trigger("mouseup");
                 return false;
             });
-            knob.on('mousedown', function(e) {
 
+            knob.on('mouseup', function(e) {
+                console.log("released");
+                blocked=false;
+                rangeelem.trigger("mouseup");
+            });
+            knob.on('mousedown', function(e) {
+                blocked=true;
+                rangeelem.trigger("mousedown");
                 e.preventDefault();
+                console.log("fancyknob: down", e)
 
                 // not appropriate to use $(this).offset as the offset change when $(this) rotated
                 var offset = $(this).parent(".knob-surround").offset()
@@ -121,7 +134,7 @@
                 };
                 var a, b, deg, tmp,
                     rad2deg = 180 / Math.PI;
-                doc.on('mousemove.rem ', function(e) {
+                doc.on('mousemove.rem', function(e) {
                     a = center.y - e.pageY;
                     b = center.x - e.pageX;
                     deg = Math.atan2(a, b) * rad2deg;
@@ -144,7 +157,7 @@
                     if (angle > maxangle) {
                         angle = maxangle;
                     }
-                    setAngle(knob.parent(), true);
+                    setAngle(knob.parent(), false);
                     currentDeg = tmp;
                     lastDeg = tmp;
                 });
@@ -255,12 +268,14 @@
                     } else {
                         pc = (angle / 280) * maxval;
                     }
-                    elem.prev().val(pc.toFixed(decimal_digits));
+                    elem.prev().val(pc.toFixed(decimal_digits)).trigger("input");
                     elem.find(".knobvalue").html(pc.toFixed(decimal_digits));
                     // return the value to the function turn
-                    options.turn(pc.toFixed(decimal_digits));
+                    //options.turn(pc.toFixed(decimal_digits));
                 }
-            }
+            }// end setAngle
+
+            // triggers initial change
             $(this).trigger('change');
         });
     };

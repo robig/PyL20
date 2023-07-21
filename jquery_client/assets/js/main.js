@@ -16,8 +16,11 @@ var monitorNames = ["A","B","C","D","E","F"];
 var main_data = {"master": {"value": 0, "mute": 0, "solo": 0}, "monitor": [{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0}]};
 var message_callbacks = [];
 var mouseDown=false;
+var editMode = false;
 var track_selected = {"group": 0, "track": null};
 var fx_track_data = [];
+var eqKeys = ["eq_off", "phase", "pan", "eq_high", "eq_mid", "eq_mid_frq", "eq_low", "eq_lowcut"];
+var unblock_bindings=[];
 
 //////////// for debugging/decoding ////////////////
 function showDebug(data) {
@@ -106,7 +109,15 @@ message_callbacks.push({
 							//console.log("channel "+num+"="+v);
 							track_data[i].groups[num].value = v;
 						});
-					
+					if(t.eq) {
+						eqKeys.forEach(k=>{
+							if(t.eq[k]) {
+								track_data[i].eq[k] = t.eq[k];
+							}else{
+								track_data[i].eq[k] = 0;
+							}
+						});
+					}
 				}
 			});
 		}
@@ -160,6 +171,23 @@ message_callbacks.push({ // Track REC
 		track_data[trk].rec = cmd.value;
 	}
 });
+message_callbacks.push({ // Track EQ
+	"filter": function(cmd) {
+		return cmd.context=="track" && (
+			cmd.function.startsWith("eq_")
+			|| cmd.function == "phase"
+			|| cmd.function == "pan"
+		) && !mouseDown;
+	},
+	"action": function(cmd) {
+		var trk=cmd.channel;
+		if(trk==18){
+			trk=17 // translate chan 18 to index 17
+		}
+		console.log("EQ for track #"+trk);
+		track_data[trk].eq[cmd.function] = cmd.value;
+	}
+});
 message_callbacks.push({ // MASTER mute
 	"filter": function(cmd) {
 		return cmd.context=="main" && cmd.function=="mute";
@@ -190,10 +218,18 @@ message_callbacks.push({ // Monitor volume
 });
 message_callbacks.push({
 	"filter": function(cmd) {
-		return cmd.function=="color";
+		return cmd.function=="color" && cmd.value;
 	},
 	"action": function(cmd) {
 		track_data[cmd.channel].color = cmd.value;
+	}
+});
+message_callbacks.push({
+	"filter": function(cmd) {
+		return cmd.function=="rename" && cmd.name;
+	},
+	"action": function(cmd) {
+		track_data[cmd.channel].name = cmd.name;
 	}
 });
 message_callbacks.push({
@@ -243,14 +279,15 @@ function onLoad(config) {
 		t.find(".name").text("CH"+(i+1));
 		t.attr("x-track", i);
 		t.on("click", function() {
-			var trk = $(this).attr("x-track");
-			track_selected.track = trk;
+			var trk = parseInt($(this).attr("x-track"));
+			
 			$(this).parent().find(".track").removeClass("selected");
 			$(this).addClass("selected");
 			$("#channel_settings .tab").removeClass("active");
 			$("#channel_settings .tab[x-track="+trk+"]").addClass("active");
+			track_selected.track = trk;
 		});
-		track_data[i] = {"number": ""+i, "name": "CH"+(i+1), "color": 0, "value": 0, "channel": i, "group": g, "mute": 0, "solo": 0, "rec": 0, "groups":[]};
+		track_data[i] = {"number": ""+(i+1), "name": "CH"+(i+1), "color": 0, "value": 0, "channel": i, "group": g, "mute": 0, "solo": 0, "rec": 0, "groups":[], "eq": {"eq_off":0, "phase": 0, "pan":0, "eq_high":0 ,"eq_mid": 0, "eq_mid_frq":0, "eq_low":0, "eq_lowcut":0 }};
 
 		t.find(".number").text(i+1);
 		if(i>=monoTrackCount && i<monoTrackCount+stereoTrackCount) {
@@ -330,7 +367,6 @@ function onLoad(config) {
 			$(elSlider).attr("x-track", i);
 			b.addBinding(elSlider, "value", "input");
 			elSlider.addEventListener("input", function() {
-				//console.log($(this));
 				var gid = $(this).attr("x-group");
 				var trk = $(this).attr("x-track");
 				var isFX = trk>=monoTrackCount+stereoTrackCount;
@@ -442,7 +478,7 @@ function onLoad(config) {
 		colorBind.addClassBinding(settings.find(".color")[0], "x-value", "color");
 		settings.find(".color").on("click", e=>{
 			showModal("colorpicker");
-			var trk = $(e.target).parent().attr("x-track");
+			var trk = $(e.target).parent().parent().attr("x-track");
 			$("#colorpicker").attr("x-track", trk);
 		})
 		nameRead.on("click", e=>{
@@ -450,13 +486,12 @@ function onLoad(config) {
 			var nameWrite = $(e.target).parent().find("input.name");
 			nameWrite.show();
 			nameWrite.focus();
+			editMode=true;
 		});
 		nameWrite.on("input", e=>{
-			var trk = $(e.target).parent().attr("x-track");
+			var trk = $(e.target).parent().parent().attr("x-track");
 			console.log("hide input. trk="+trk);
 			track_data[trk].name=e.target.value;
-			
-			
 		});
 		nameWrite.on('keypress',function(e) {
 			if(e.which == 13) {
@@ -464,10 +499,45 @@ function onLoad(config) {
 				var nameRead =nameWrite.parent().find("div.name");
 				nameRead.show();
 				nameWrite.hide();
-				var trk = $(e.target).parent().attr("x-track");
-				sendToServer({"context": "track-settings", "name": track_data[trk].name, "channel": track_data[trk].channel});
+				setTimeout(f=> { editMode=false; }, 500);
+				e.preventDefault();
+				var trk = $(e.target).parent().parent().attr("x-track");
+				sendToServer({"context": "track-settings", "name": track_data[trk].name, "channel": track_data[trk].channel, "color": track_data[trk].color});
 			}
 		});
+
+		var eq_func=["pan", "eq_high", "eq_low", "eq_lowcut", "eq_mid", "eq_mid_frq", "eq_high", "fx1", "fx2"];
+		eq_func.forEach( f=> {
+			var bi= new Binding({
+				object: track_data[i].eq,
+				property: f
+			});
+			var elInput = $("#channel_settings .tab[x-track="+i+"] input."+f)[0];
+			$(elInput).attr("x-func", f);
+			$(elInput).attr("x-track", i);
+			bi.addBinding(elInput, "value", "input");
+			bi.setTrigger("change");
+			bi.setIdentifier(elInput);
+			bi.blocked=true; // block events now
+			unblock_bindings.push(bi); // unblock later
+			bi.addCallback( e=> {
+				const now = Date.now();
+				if((now - lastChange) > 100 ) { //DEbounce
+					lastChange = Date.now();
+					var func=$(e.ident).attr("x-func");
+					var trk=$(e.ident).attr("x-track");
+					var val=e.value;
+					console.log("Input changed (SEND TO SERVER) "+func+" for #"+trk+" to "+val);
+					sendToServer({"context": "track", "function": func, "value": val, "channel": track_data[trk].channel});
+				}
+			});
+			//var knob=$("#channel_settings .tab[x-track="+i+"] .knob-surround .knob."+f)[0];
+			$(elInput).on('mousedown', function() {mouseDown=true;});
+			$(elInput).on('mouseup', function() {
+				mouseDown=false;
+			});
+		})
+		
 
 	}//End for track
 
@@ -499,7 +569,7 @@ function onLoad(config) {
 		var track = main_data.master;
 		track.mute = (track.mute == 0 ? 1 : 0);
 		console.log("mute MASTER: "+track.mute);
-		sendToServer({"context": "main", "mute": track.mute, "channel": 10});
+		sendToServer({"context": "main", "mute": track.mute, "channel": 9});
 	});
 
 	////////// MONITOR section ///////////
@@ -508,6 +578,7 @@ function onLoad(config) {
 		var mon=monitorNames[m];
 		var monTemplate=$("#monitor_tpl").html();
 		var moni=$(monTemplate);
+		moni.attr("x-monitor", m);
 		moni.appendTo($("#main .monitor"));
 		moni.addClass("monitor"+mon);
 
@@ -516,10 +587,20 @@ function onLoad(config) {
 			property: "value"
 		});
 		b.addBinding(moni[0], "value", "input");
-		b.setIdentifier(mon);
-		b.addCallback((val,mon)=>{
-			$(".monitor .monitor"+mon).trigger("change"); // required to update UI
-			console.log("monitor callback: would sendToServer: "+val);
+		b.setTrigger("change");
+		b.setIdentifier(m);
+		b.blocked=true;
+		unblock_bindings.push(b);
+		//$(moni).on("change", e=> {
+		b.addCallback( evt=>{
+			const now = Date.now();
+			if((now - lastChange) > 100 ) { //DEbounce
+				lastChange = Date.now();
+				var chan=evt.ident; //$(target).attr("x-monitor");
+				var val=evt.value; //$(target).val();
+				console.log("Monitor changed (sendToServer) for #"+chan+" to "+val);
+				sendToServer({"context": "monitor", "function":"volume", "value": val, "channel": chan});
+			}
 		});
 	}
 
@@ -528,7 +609,13 @@ function onLoad(config) {
 }
 
 document.body.onload = function() {
-	$(".knob").fancyknob();
+	setTimeout(function() {
+		$(".knob").fancyknob();
+		unblock_bindings.forEach(u=>{
+			u.blocked=false;
+		});
+		console.log("unblocked");
+	}, 500);
 }
 
 var lastChange = 0;
@@ -591,6 +678,8 @@ function connect() {
 }
 
 function parseIncomingCommand(cmd) {
+	console.log("Blocking all callbacks")
+	unblock_bindings.forEach(b=> {b.blocked=true;});
 	for(var i=0;i<message_callbacks.length; i++){
 		cb=message_callbacks[i]
 		if(cb.filter(cmd)) cb.action(cmd);
@@ -598,6 +687,9 @@ function parseIncomingCommand(cmd) {
 	if(cmd.context=="main" && cmd.function == "volume") {
 		main_data.master.value = cmd.value;
 	}
+
+	console.log("unBlocking all callbacks")
+	unblock_bindings.forEach(b=> {b.blocked=false;});
 }
 
 function updateStatus(status) {
@@ -609,41 +701,75 @@ var b = new Binding({
 	object: track_selected,
 	property: "track"
 });
-b.addCallback(trk=>{
+b.addCallback(evt=>{
+	var trk=evt.value;
 	$(".track").removeClass("selected");
 	$(".track.track"+trk).addClass("selected");
 	$("#channel_settings .tab").removeClass("active");
 	$("#channel_settings .tab[x-track="+trk+"]").addClass("active");
 });
 $(window).keydown(function (e) {
+	if(editMode) return;
 	console.log("Keydown: '"+e.keyCode+"'");
+	var trk=track_selected.track;
+	var grp=track_selected.group;
 	if(e.keyCode==39){ // right arrow ->
-		if(!track_selected.track) {
+		if(track_selected.track==null || track_selected.track > track_data.length) {
 			track_selected.track = 0;
 		}else{
 			track_selected.track ++;
-			$('.track_container').scrollTo($("track.track"+track_selected.track)[0], 0.5);
 		}
+		// scroll to track in center:
+		var to=track_selected.track-3;
+		$('#track_container').scrollTo($(".track.track"+to)[0], 0.5);
 		e.preventDefault();
 	}
-	if(e.keyCode==37){ // left arrow ->
+	if(e.keyCode==37){ // left arrow <-
 		if(!track_selected.track) {
-			track_selected.track = 0;
+			track_selected.track = track_data.length-1;
 		}else{
 			track_selected.track --;
 			if(track_selected.track<0){
 				track_selected.track=track_data.length-1;
 			}
 		}
+		// scroll to track in center:
+		var to=track_selected.track-3;
+		if(to<0)to=0;
+		$('#track_container').scrollTo($(".track.track"+to)[0], 0.5);
 		e.preventDefault();
+	}
+	if(e.keyCode==38){ // Up arrow ->
+		if(editMode) return;
+		track_data[trk].groups[grp].value += 1;
+		$(".track.selected .groups.active input.slider").trigger("input");
+	}
+	if(e.keyCode==40){ // Down arrow ->
+		if(editMode) return;
+		track_data[trk].groups[grp].value += -1;
+		$(".track.selected .groups.active input.slider").trigger("input");
 	}
 });
 $(window).keypress(function (e) {
+	if(editMode) return;
 	console.log("Keypress: '"+e.key+"'");
 	if (e.key === ' ' || e.key === 'Spacebar') {
 		// ' ' is standard, 'Spacebar' was used by IE9 and Firefox < 37
 		e.preventDefault();
-		console.log('Space pressed');
+		console.log('Space pressed on track '+track_selected.track);
+		//track_data[track_selected.track].mute = track_data[track_selected.track].mute == 0 ? 1 : 0;
+		$(".track.selected button.mute").trigger("click");
+	}
+	
+	if (e.key === 'Enter' || (e.which == 13) ) {
+		e.preventDefault();
+		var trk=track_selected.track;
+		console.log('Enter pressed on track '+trk);
+		$('#channel_settings').show();
+		$("#channel_settings .tab .name.write").hide();
+		$("#channel_settings .tab .name.read").show();
+		//$("#channel_settings .tab[x-track="+trk+"] .name.write").show();
+		$("#channel_settings .tab[x-track="+trk+"] .name.read").trigger("click");
 	}
 });
 

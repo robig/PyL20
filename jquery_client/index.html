@@ -97,10 +97,33 @@
 
     <template id="chan_settings_tpl">
         <div class="tab">
-            <div class="name read"></div>
-            <input name="track_name" class="name write" style="display: none;" maxlength="8"></input>
-            <div class="number"></div>
-            <div class="color"></div>
+            <div class="left_section section">
+                <div class="name read"></div>
+                <input name="track_name" class="name write" style="display: none;" maxlength="8"></input>
+                <div class="number"></div>
+                <div class="color"></div>
+            </div>
+
+            <div class="eq_left_section section">
+                <input class="knob pan" type="range" min="0" max="100" value="50">
+                <button class="button phase">0</button>
+                <button class="button eq_off">EQ OFF</button>
+                
+            </div>
+
+            <div class="eq_section section">
+                <div class="graph_eq"></div>
+                <input class="knob eq_lowcut" type="range" min="0" max="56" value="0">
+                <input class="knob eq_low" type="range" min="0" max="60" value="0">
+                <input class="knob eq_mid" type="range" min="0" max="60" value="0">
+                <input class="knob eq_mid_frq" type="range" min="0" max="96" value="0">
+                <input class="knob eq_high" type="range" min="0" max="60" value="0">
+            </div>
+
+            <div class="efx_section section">
+                <input class="knob fx1" type="range" min="0" max="60" value="0">
+                <input class="knob fx2" type="range" min="0" max="60" value="0">
+            </div>
         </div>
     </template>
 

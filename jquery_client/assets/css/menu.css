@@ -58,10 +58,74 @@
     height: 220px;
 }
 
-#channel_settings .name {
+.section, .row {
+    display: block;
+    height: 100%;
+    float: left;
+}
+
+#channel_settings .knob-surround {
+    margin: 4px 17px;
+    margin-top: 39px;
+}
+
+#channel_settings .left_section {
+    margin-left: 8px;
+    width: 100px;
+}
+
+#channel_settings .eq_left_section {
+    width: 80px;
+    padding-left: 20px;
+}
+#channel_settings .eq_left_section .pan {
     position: relative;
+}
+#channel_settings .eq_left_section .phase {
+    position: relative;
+    margin-top: 20px;
+}
+#channel_settings .eq_left_section .eq_off {
+    position: relative;
+    margin-top: 25px;
+}
+
+
+#channel_settings .eq_section {
+    width: 419px;
+    padding-left: 11px;
+}
+#channel_settings .eq_section .graph_eq {
+    width: 375px;
+    height: 100px;
+    margin-top: 18px;
+    padding: 0px 5px;
+    margin-left: 20px;
+}
+#channel_settings .eq_section .knob-surround {
+    margin: 10px 18px;
+    margin-top: 39px;
+}
+
+#channel_settings .efx_section {
+    width: 100px;
+}
+#channel_settings .efx_section .efx1 {
+    position: relative;
+}
+#channel_settings .efx_section .efx2 {
+    position: relative;
+}
+#channel_settings > div.tab > div:nth-child(4) > div:nth-child(4) {
+    margin-top: 69px;
+}
+
+
+
+#channel_settings .name {
+    position: absolute;
     top: 10px;
-    left: 22px;
+    left: 24px;
     width: 80px;
     height: 15px;
     z-index: 51;
@@ -75,8 +139,8 @@
 }
 #channel_settings .color {
     position: relative;
-    top: 35px;
-    left: 40px;
+    top: 34px;
+    left: 32px;
     width: 28px;
     height: 28px;
     border: solid black 1px;

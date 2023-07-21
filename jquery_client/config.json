@@ -1,6 +1,6 @@
 {
     "connection": {
-        "url": "ws://localhost:5885"
+        "url": "ws://air1.local:5885"
     },
     "tracks": {
         "mono": {

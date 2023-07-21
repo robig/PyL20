@@ -15,8 +15,12 @@ def convert_to_bytes(data):
         value = get_Value_from_track_data(control, data)
         channel = int(data["channel"])
     elif data["context"] == "main":
-        print("main")
         control = get_CC_from_main_data(data)
+        channel = int(data["channel"])
+        print("main: channel=",channel, "cc=",control)
+        value = int(data["value"])
+    elif data["context"] == "monitor":
+        control = get_CC_from_monitor_data(data)
         channel = int(data["channel"])
         value = int(data["value"])
     elif data["context"] == "track-settings":
@@ -37,22 +41,34 @@ def need_sysex_end_message(data):
 def get_CC_from_track_data(data):
     if "mute" in data:
         if data["channel"]>15:
+            data["channel"]-=16
             return MIDI_CC_TRACK_MUTE2
         return MIDI_CC_TRACK_MUTE
     if "solo" in data:
         if data["channel"]>15:
+            data["channel"]-=16
             return MIDI_CC_TRACK_SOLO2
         return MIDI_CC_TRACK_SOLO
     if "rec" in data:
         if data["channel"]>15:
+            data["channel"]-=16
             return MIDI_CC_TRACK_REC2
         return MIDI_CC_TRACK_REC
+    if "function" in data:
+        func = data["function"]
+        if data["channel"] > 15:
+            data["channel"]-=16
+            if func in WS_FUNCTION_TO_TRACK_CC2:
+                return WS_FUNCTION_TO_TRACK_CC2[func]
+                
+        if func in WS_FUNCTION_TO_TRACK_CC:
+            return WS_FUNCTION_TO_TRACK_CC[func]
     
     group = int(data["group"])
     if data["channel"]>15: #there can only be 16 channels (0..15)
-        print("channel16", data["channel"])
+        #print("channel16", data["channel"])
         data["channel"]=data["channel"]-16
-        print("channel now", data["channel"])
+        #print("channel now", data["channel"])
         if group >= 0 and group < len(MIDI_CC_TRACK_ST_GROUPS):
             return MIDI_CC_TRACK_ST_GROUPS[group]
     else:
@@ -102,9 +118,18 @@ def get_CC_from_main_data(data):
     if data["channel"] == 0: #master
         channel = MIDI_CHAN_MASTER_VOLUME # main channel starts at 10
         return MIDI_CC_MASTER_VOLUME
-    
+    if "mute" in data:
+        data["value"] = data.get("mute")
+        return MIDI_CC_MASTER_MUTE
+    if "rec" in data:
+        data["value"] = data.get("rec")
+        return MIDI_CC_MASTER_REC
 
     return MIDI_CC_MASTER_VOLUME #fallback
+
+# convert json dict to control value (for monitor section)
+def get_CC_from_monitor_data(data):
+    return MIDI_CC_MONITOR
 
 def print_hex_line(data : bytearray):
     res = ' '.join(format(x, '02x') for x in data)
@@ -152,11 +177,11 @@ def decode_sysex_track_rename(sysex_data : bytearray):
     offset=6
     chan = int(sysex_data[offset]) -1
     offset+=1
-    end=offset+8
+    end=offset+9
     d = sysex_data[offset:end]
     newname=d.decode('ascii', errors='ignore').replace("\x00","")
     print(f"Received track rename: #{chan}: name={newname}")
-    return { "command": {"function": "color", "channel": chan, "name": newname} }
+    return { "command": {"function": "rename", "channel": chan, "name": newname} }
 
 def decode_sysex_track_info(sysex_data : bytearray):
     num_tracks=18
@@ -182,7 +207,7 @@ def decode_sysex_track_info(sysex_data : bytearray):
         f=offset + i*line_len
         t=f+line_len
         d=sysex_data[f:t]
-        command["tracks"].append({"number": i, "name": d.decode('ascii', errors='ignore').replace("\x00",""), "color": 0, "mute": 0, "solo": 0, "values":[]})
+        command["tracks"].append({"number": i, "name": d.decode('ascii', errors='ignore').replace("\x00",""), "color": 0, "mute": 0, "solo": 0, "values":[], "eq": {}})
 
     # two FX
     command["tracks"].append({"number":18, "name": "FX1", "mute": 0, "solo": 0, "values":[]})
@@ -214,10 +239,72 @@ def decode_sysex_track_info(sysex_data : bytearray):
 
     # REC
     offset = 21 * line_len
-    for i in range(0, num_tracks-1):
+    for i in range(0, num_tracks):
         f=offset + i
         d=sysex_data[f]
         command["tracks"][i]["rec"]=int(d)
+
+    # EQ: phase
+    offset = 27 * line_len
+    for i in range(0, num_tracks):
+        f=offset + i
+        d=sysex_data[f]
+        command["tracks"][i]["eq"]["phase"]=int(d)
+    # EQ: PAN
+    offset = 29 * line_len
+    for i in range(0, num_tracks):
+        f=offset + i
+        d=sysex_data[f]
+        command["tracks"][i]["eq"]["pan"]=int(d)
+
+    # EQ: Off
+    offset = 31 * line_len
+    for i in range(0, num_tracks):
+        f=offset + i
+        d=sysex_data[f]
+        command["tracks"][i]["eq"]["eq_off"]=int(d)
+    # EQ: High
+    offset = 33 * line_len
+    for i in range(0, num_tracks):
+        f=offset + i
+        d=sysex_data[f]
+        command["tracks"][i]["eq"]["eq_high"]=int(d)
+    # EQ: MidFrq
+    offset = 35 * line_len
+    for i in range(0, num_tracks):
+        f=offset + i
+        d=sysex_data[f]
+        command["tracks"][i]["eq"]["eq_mid_frq"]=int(d)
+    # EQ: MidGain
+    offset = 37 * line_len
+    for i in range(0, num_tracks):
+        f=offset + i
+        d=sysex_data[f]
+        command["tracks"][i]["eq"]["eq_mid"]=int(d)
+    # EQ: Low
+    offset = 39 * line_len
+    for i in range(0, num_tracks):
+        f=offset + i
+        d=sysex_data[f]
+        command["tracks"][i]["eq"]["eq_low"]=int(d)
+    # EQ: LowCut
+    offset = 41 * line_len
+    for i in range(0, num_tracks):
+        f=offset + i
+        d=sysex_data[f]
+        command["tracks"][i]["eq"]["eq_lowcut"]=int(d)
+    # EQ: EFX1
+    offset = 43 * line_len
+    for i in range(0, num_tracks):
+        f=offset + i
+        d=sysex_data[f]
+        command["tracks"][i]["eq"]["fx1"]=int(d)
+    # EQ: EFX2
+    offset = 45 * line_len
+    for i in range(0, num_tracks):
+        f=offset + i
+        d=sysex_data[f]
+        command["tracks"][i]["eq"]["fx2"]=int(d)
 
     # track volumes start on line 47
     offset=47*line_len
@@ -273,16 +360,23 @@ def create_sysex_track_settings(data):
     if data.get("name"):
         value = bytes(data["name"], 'ascii')
         chan = int(data["channel"]) + 1
-        sysex = bytearray(b"\xF0\x52\x00\x00\x31\x02\x02\x09\x00" + b"\x45\x45\x45\x65\x63\x74\x73\x00\x00")
+        if chan>16: chan+=1 # stereo channel 17/18 occupies index 16/17
+        color = 0
+        if "color" in data:
+            color = int(data["color"])
+        sysex = bytearray(b"\xF0\x52\x00\x00\x31\x02\x02\x09\x00" + b"\x00\x00\x00\x00\x00\x00\x00\x00\x00")
 
         print("Building sysex message... from", sysex)
         sysex[6] = chan
         print("+channel                      ", sysex)
+        sysex[8] = color
+        print("+color                        ", sysex)
         for i in range(9, 18):
             if len(value) > i-9:
                 sysex[i] = value[i-9]
 
         print("sysex:                        ", sysex)
+        return sysex
     if data.get("color"):
         sysex = bytearray(b"\xF0\x52\x00\x00\x31\x03\x02\x06\x80\xF7")
         chan = int(data["channel"])+1

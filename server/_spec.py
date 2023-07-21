@@ -26,14 +26,25 @@ MIDI_CC_TRACK_SOLO2=51      # for stereo tracks
 MIDI_CC_TRACK_MUTE=48       # value 0/1
 MIDI_CC_TRACK_MUTE2=49      # for stereo tracks 17-20
 MIDI_CC_TRACK_EQ_OFF=14     # value 0/1
+MIDI_CC_TRACK_EQ_OFF2=15    # value 0/1
 MIDI_CC_TRACK_EQ_PHASE=10   # value 0/1
+MIDI_CC_TRACK_EQ_PHASE2=11
 MIDI_CC_TRACK_EQ_LOWCUT=46  # value 0-56
-MIDI_CC_TRACK_EQ_MID_FRQ=24 # value 0-96
+MIDI_CC_TRACK_EQ_LOWCUT2=47
+MIDI_CC_TRACK_EQ_MID_FRQ =24 # value 0-96
+MIDI_CC_TRACK_EQ_MID_FRQ2=25
 MIDI_CC_TRACK_EQ_MID=26     # value 0-60
+MIDI_CC_TRACK_EQ_MID2=27
 MIDI_CC_TRACK_EQ_HIGH=20    # value 0-60
-MIDI_CC_TRACK_PAN=12        # value 0-100
-MIDI_CC_TRACK_FX1=52        # value 0-60
-MIDI_CC_TRACK_FX2=54        # value 0-60
+MIDI_CC_TRACK_EQ_HIGH2=21   
+MIDI_CC_TRACK_EQ_LOW=44     # value 0-60
+MIDI_CC_TRACK_EQ_LOW2=45    
+MIDI_CC_TRACK_PAN =12       # value 0-100
+MIDI_CC_TRACK_PAN2=13       # value 0-100 for stereo tracks
+MIDI_CC_TRACK_FX1   =52     # value 0-60
+MIDI_CC_TRACK_FX1_2 =52     # value 0-60 for stereo tracks
+MIDI_CC_TRACK_FX2   =54     # value 0-60
+MIDI_CC_TRACK_FX2_2 =55     # value 0-60 for stereo tracks
 MIDI_CC_MONITOR=83          # value 0-118
 
 MIDI_CC_FX=80               # [M] channel 12/13, value 0-120
@@ -78,3 +89,9 @@ MIDI_SYSEX_TRACK_RENAME=bytearray(b"\x52\x00\x00\x31\x02")
 CMD_TRACK_INFO=b"\xf0\x52\x00\x00\x2b\x80\xf7" #F052 0000 2B80 F7
 MIDI_SYSEX_END=b"\xf7"
 MIDI_SYSEX_START=b"\xf0"
+
+
+WS_INPUT_VALID_CONTEXTS=["track", "main", "track-settings", "FXtrack", "monitor"]
+
+WS_FUNCTION_TO_TRACK_CC={"pan": MIDI_CC_TRACK_PAN, "eq_lowcut": MIDI_CC_TRACK_EQ_LOWCUT, "eq_low": MIDI_CC_TRACK_EQ_LOW, "eq_mid": MIDI_CC_TRACK_EQ_MID, "eq_mid_frq": MIDI_CC_TRACK_EQ_MID_FRQ, "eq_high": MIDI_CC_TRACK_EQ_HIGH}
+WS_FUNCTION_TO_TRACK_CC2={"pan": MIDI_CC_TRACK_PAN2, "eq_lowcut": MIDI_CC_TRACK_EQ_LOWCUT2, "eq_low": MIDI_CC_TRACK_EQ_LOW2, "eq_mid": MIDI_CC_TRACK_EQ_MID2, "eq_mid_frq": MIDI_CC_TRACK_EQ_MID_FRQ2, "eq_high": MIDI_CC_TRACK_EQ_HIGH2}

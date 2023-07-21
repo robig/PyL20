@@ -103,7 +103,8 @@ async def ws_process_request(data):
         if data.get("cmd") == "testme3":
             await cmd_testme3()
         return
-    if data["context"] == "track" or data["context"] == "main" or data["context"] == "track-settings" or  data["context"] == "FXtrack":
+    if data["context"] in WS_INPUT_VALID_CONTEXTS:
+    #if data["context"] == "track" or data["context"] == "main" or data["context"] == "track-settings" or  data["context"] == "FXtrack": # or data["context"] == "monitor":
         message_queue.put_nowait(data)
     True
 
@@ -145,6 +146,7 @@ async def received_data(sender: BleakGATTCharacteristic, data: bytearray):
         return
     except Exception as e:
         logger.error("No MIDI message or parse error: "+ str(e))
+        traceback.print_exc()
     
     if data[2] == MIDI_SYSEX_START:
         print("SysEx START")
@@ -220,6 +222,7 @@ async def ble_main(): #args: argparse.Namespace):
                                 await send_midi_message_to_mixer(client, msg)
                             except Exception as e:
                                 logger.error("Error sending message to mixer: %s", str(e))
+                                traceback.print_exc()
                         await asyncio.sleep(0.1)
 
                     device_status["connected"] = False
@@ -236,8 +239,7 @@ async def ble_main(): #args: argparse.Namespace):
 def web_main(PORT : int):
     Handler = http.server.SimpleHTTPRequestHandler
     with socketserver.TCPServer(("", PORT), Handler) as httpd:
-        print("serving at port", PORT)
-    
+        logger.info( f"HTTP server at port {PORT}")    
         httpd.serve_forever()
 
 async def main(args: argparse.Namespace):

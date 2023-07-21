@@ -56,6 +56,49 @@ def create_json_message(message):
             chan += 16
             func="rec"
             context="track"
+        # track pan
+        elif message.control == MIDI_CC_TRACK_PAN or message.control == MIDI_CC_TRACK_PAN2:
+            if message.control == MIDI_CC_TRACK_PAN2: chan += 16
+            func = "pan"
+            context = "track"
+        # track FX sends
+        elif message.control == MIDI_CC_TRACK_FX1 or message.control == MIDI_CC_TRACK_FX1_2:
+            if message.control == MIDI_CC_TRACK_FX1_2: chan += 16
+            func = "fxsend1"
+            context = "track"
+        elif message.control == MIDI_CC_TRACK_FX2 or message.control == MIDI_CC_TRACK_FX2_2:
+            if message.control == MIDI_CC_TRACK_FX2_2: chan += 16
+            func = "fxsend2"
+            context = "track"
+        # track EQ
+        elif message.control == MIDI_CC_TRACK_EQ_OFF or message.control == MIDI_CC_TRACK_EQ_OFF2:
+            func = "eq_off"
+            context = "track"
+            if message.control == MIDI_CC_TRACK_EQ_OFF2: chan += 16
+        elif message.control == MIDI_CC_TRACK_EQ_LOW or message.control == MIDI_CC_TRACK_EQ_LOW2:
+            func = "eq_low"
+            context = "track"
+            if message.control == MIDI_CC_TRACK_EQ_LOW2: chan += 16
+        elif message.control == MIDI_CC_TRACK_EQ_LOWCUT or message.control == MIDI_CC_TRACK_EQ_LOWCUT2:
+            func = "eq_lowcut"
+            context = "track"
+            if message.control == MIDI_CC_TRACK_EQ_LOWCUT2: chan+=16
+        elif message.control == MIDI_CC_TRACK_EQ_MID or message.control == MIDI_CC_TRACK_EQ_MID2:
+            func = "eq_mid"
+            context = "track"
+            if message.control == MIDI_CC_TRACK_EQ_MID2: chan+=16
+        elif message.control == MIDI_CC_TRACK_EQ_MID_FRQ or message.control == MIDI_CC_TRACK_EQ_MID_FRQ2:
+            func = "eq_mid_frq"
+            context = "track"
+            if message.control == MIDI_CC_TRACK_EQ_MID_FRQ2: chan+=16
+        elif message.control == MIDI_CC_TRACK_EQ_HIGH or message.control == MIDI_CC_TRACK_EQ_HIGH2:
+            func = "eq_high"
+            context = "track"
+            if message.control == MIDI_CC_TRACK_EQ_HIGH2: chan+=16
+        elif message.control == MIDI_CC_TRACK_EQ_PHASE or message.control == MIDI_CC_TRACK_EQ_PHASE2:
+            func = "phase"
+            context = "track"
+            if message.control == MIDI_CC_TRACK_EQ_PHASE2: chan+=16
 
         # master volume:
         elif message.control == MIDI_CC_MASTER_VOLUME and message.channel == MIDI_CHAN_MASTER_VOLUME:
@@ -70,7 +113,7 @@ def create_json_message(message):
             context="main"
         
         # FX channels
-         # Volume for tracks 1-16:
+        # Volume for tracks 1-16:
         for c in range(0, len(MIDI_CC_FX_GROUPS)):
             grp = MIDI_CC_FX_GROUPS[c]
             ch = MIDI_CHAN_FX_GROUPS[c]

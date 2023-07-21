@@ -10,18 +10,29 @@ function Binding(b) {
     this.callbacks=[];
     this.identifier=null;
     this.blocked=false;
+    this.trigger=null;
     this.valueSetter = function(val){
         _this.value = val;
         
+        var ta = null;
         for (var i = 0; i < _this.elementBindings.length; i++) {
             var binding=_this.elementBindings[i]
             if(binding) {
+                ta = binding.element;
                 var v = val;
                 if(binding.mapper) v = binding.mapper(val, binding.element[binding.attribute]);
-                binding.element[binding.attribute] = v
+                binding.element[binding.attribute] = v;
+            }
+            if(_this.trigger) {
+                $(binding.element).trigger(_this.trigger);
             }
         }
-        _this.callbacks.forEach(cb=> cb(val, _this.identifier));
+
+        if(_this.blocked && _this.callbacks.length>0) {
+            //console.log("callback blocked", _this.callbacks);
+            return;
+        }
+        _this.callbacks.forEach(cb=> cb({"value": val, "ident":_this.identifier, "target": ta }));
     }
     this.addBinding = function(element, attribute, event){
         if(!element) return _this;
@@ -30,7 +41,8 @@ function Binding(b) {
             attribute: attribute
         };
         if (event){
-            element.addEventListener(event, function(event){
+            $(element).on(event, function(evt){
+                //console.log("bingding.js event: "+event, evt)
                 _this.valueSetter(element[attribute]);
             });
             //needed? 
@@ -85,6 +97,10 @@ function Binding(b) {
 
     this.setIdentifier = function(val) {
         _this.identifier = val;
+    }
+
+    this.setTrigger = function(val) {
+        _this.trigger = val;
     }
 
     Object.defineProperty(b.object, b.property, {

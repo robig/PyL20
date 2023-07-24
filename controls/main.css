@@ -1,0 +1,52 @@
+body {
+    background: URL('../jquery_client/assets/img/bg.png');
+
+}
+
+body > div.controls {
+    position: absolute;
+    left: 10px;
+    top: 256px;
+}
+
+body > div.controls.efx1 {
+    position: absolute;
+    left: 10px;
+    top: 208px;
+}
+
+body > div.controls.eq {
+    position: absolute;
+    left: 10px;
+    top: 98px;
+}
+
+
+.controls {
+    background: black;
+    border: solid red 1px;
+}
+
+.pan {
+    background: #000;
+    border: solid #2a2828 1px;
+    border-radius: 2px;
+    width: 77px;
+    height: 23px;
+}
+
+.efx1 {
+    background: #000;
+    border: solid #2a2828 1px;
+    border-radius: 2px;
+    width: 77px;
+    height: 23px;
+}
+
+.eq {
+    background: #000;
+    border: solid #2a2828 1px;
+    border-radius: 2px;
+    width: 77px;
+    height: 40px;
+}

@@ -64,11 +64,11 @@ def create_json_message(message):
         # track FX sends
         elif message.control == MIDI_CC_TRACK_FX1 or message.control == MIDI_CC_TRACK_FX1_2:
             if message.control == MIDI_CC_TRACK_FX1_2: chan += 16
-            func = "fxsend1"
+            func = "efx1"
             context = "track"
         elif message.control == MIDI_CC_TRACK_FX2 or message.control == MIDI_CC_TRACK_FX2_2:
             if message.control == MIDI_CC_TRACK_FX2_2: chan += 16
-            func = "fxsend2"
+            func = "efx2"
             context = "track"
         # track EQ
         elif message.control == MIDI_CC_TRACK_EQ_OFF or message.control == MIDI_CC_TRACK_EQ_OFF2:

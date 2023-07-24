@@ -77,7 +77,10 @@ async def send_midi_message_to_mixer(client, message):
     d = " ".join(hex(n) for n in data)
     logger.info("Sent: %s", d)
     if need_sysex_end_message(message):
+        data = bytearray(DATA_PREFIX) + bytearray(MIDI_SYSEX_END)
         await client.write_gatt_char(BLE_MIDI_UUID, bytearray(DATA_PREFIX) + bytearray(MIDI_SYSEX_END))
+        d = " ".join(hex(n) for n in data)
+        logger.info("Sent: %s", d)
 
 async def send_raw_message(client, message):
     d = " ".join(hex(n) for n in message.get("raw"))

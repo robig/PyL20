@@ -177,6 +177,7 @@ message_callbacks.push({ // Track EQ
 			cmd.function.startsWith("eq_")
 			|| cmd.function == "phase"
 			|| cmd.function == "pan"
+			|| cmd.function.startsWith('efx')
 		) && !mouseDown;
 	},
 	"action": function(cmd) {
@@ -287,7 +288,10 @@ function onLoad(config) {
 			$("#channel_settings .tab[x-track="+trk+"]").addClass("active");
 			track_selected.track = trk;
 		});
-		track_data[i] = {"number": ""+(i+1), "name": "CH"+(i+1), "color": 0, "value": 0, "channel": i, "group": g, "mute": 0, "solo": 0, "rec": 0, "groups":[], "eq": {"eq_off":0, "phase": 0, "pan":0, "eq_high":0 ,"eq_mid": 0, "eq_mid_frq":0, "eq_low":0, "eq_lowcut":0 }};
+		track_data[i] = {"number": ""+(i+1), "name": "CH"+(i+1), "color": 0, "value": 0, "channel": i, "group": g, "mute": 0, "solo": 0, "rec": 0, "groups":[], "eq": {"eq_off":0, "phase": 0, "pan":0, "eq_high":0 ,"eq_mid": 0, "eq_mid_frq":0, "eq_low":0, "eq_lowcut":0, "efx1": 0, "efx2":0 }};
+
+
+		addTrackVisuals(i, t, track_data[i]) //controls.js
 
 		t.find(".number").text(i+1);
 		if(i>=monoTrackCount && i<monoTrackCount+stereoTrackCount) {
@@ -506,7 +510,7 @@ function onLoad(config) {
 			}
 		});
 
-		var eq_func=["pan", "eq_high", "eq_low", "eq_lowcut", "eq_mid", "eq_mid_frq", "eq_high", "fx1", "fx2"];
+		var eq_func=["pan", "eq_high", "eq_low", "eq_lowcut", "eq_mid", "eq_mid_frq", "eq_high", "efx1", "efx2"];
 		eq_func.forEach( f=> {
 			var bi= new Binding({
 				object: track_data[i].eq,
@@ -531,6 +535,38 @@ function onLoad(config) {
 					sendToServer({"context": "track", "function": func, "value": val, "channel": track_data[trk].channel});
 				}
 			});
+			if(f=="pan") {
+				bi.setRedrawCallback(evt=>{
+					var trk=$(evt.ident).attr("x-track");
+					var el=$('.track[x-track='+trk+'] .pan');
+					console.log("drawPan");
+					drawPan(el, evt.value);
+				});
+			}
+			if(f=="efx1") {
+				bi.setRedrawCallback(evt=>{
+					var trk=$(evt.ident).attr("x-track");
+					var el=$('.track[x-track='+trk+'] .efx1');
+					console.log("drawFx");
+					drawFx(el, evt.value);
+				});
+			}
+			if(f=="efx2") {
+				bi.setRedrawCallback(evt=>{
+					var trk=$(evt.ident).attr("x-track");
+					var el=$('.track[x-track='+trk+'] .efx2');
+					console.log("drawFx");
+					drawFx(el, evt.value);
+				});
+			}
+			if(f.startsWith("eq_")) {
+				bi.setRedrawCallback(evt=>{
+					var trk=$(evt.ident).attr("x-track");
+					var el=$('.track[x-track='+trk+'] .eq');
+					console.log("drawEq");
+					drawEq(el, track_data[trk]);
+				});
+			}
 			//var knob=$("#channel_settings .tab[x-track="+i+"] .knob-surround .knob."+f)[0];
 			$(elInput).on('mousedown', function() {mouseDown=true;});
 			$(elInput).on('mouseup', function() {
@@ -694,6 +730,7 @@ function parseIncomingCommand(cmd) {
 
 function updateStatus(status) {
 	$('#main .status').text(status);
+	if(status=='ready') $("#main .status").addClass("ready");
 }
 
 

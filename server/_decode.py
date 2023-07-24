@@ -32,7 +32,9 @@ def convert_to_bytes(data):
     return bytearray([channel + MIDI_CC_BASE, control, value])
 
 def need_sysex_end_message(data):
+    print("need_sysex_end_message", data)
     if data["context"] == "track-settings" and data.get("name"):
+        print("YES")
         return True
 
     return False

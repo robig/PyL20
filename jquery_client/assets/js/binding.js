@@ -8,6 +8,7 @@ function Binding(b) {
         return _this.value;
     }
     this.callbacks=[];
+    this.redrawCalback=null;
     this.identifier=null;
     this.blocked=false;
     this.trigger=null;
@@ -27,7 +28,9 @@ function Binding(b) {
                 $(binding.element).trigger(_this.trigger);
             }
         }
-
+        if(_this.redrawCalback) {
+            _this.redrawCalback({"value": val, "ident": _this.identifier});
+        }
         if(_this.blocked && _this.callbacks.length>0) {
             //console.log("callback blocked", _this.callbacks);
             return;
@@ -101,6 +104,10 @@ function Binding(b) {
 
     this.setTrigger = function(val) {
         _this.trigger = val;
+    }
+
+    this.setRedrawCallback = function(val) {
+        _this.redrawCalback = val;
     }
 
     Object.defineProperty(b.object, b.property, {

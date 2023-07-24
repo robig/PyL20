@@ -224,3 +224,47 @@ input[type=range].slider {
 	  /*Edge starts the margin from the thumb, not the track as other browsers do*/
 	}
 }
+
+
+/************ controls ****************/
+
+.controls {
+    background: black;
+	position: absolute;
+	left: 6px;
+}
+
+.pan {
+    background: #000;
+    border: solid #2a2828 1px;
+    border-radius: 2px;
+    width: 77px;
+    height: 23px;
+
+	top: 188px;
+}
+
+.efx1, .efx2 {
+    background: #000;
+    border: solid #2a2828 1px;
+    border-radius: 2px;
+    width: 77px;
+    height: 23px;
+}
+.efx1 {
+	top: 94px;
+}
+
+.efx2 {
+	top: 141px;
+}
+
+.eq {
+    background: #000;
+    border: solid #2a2828 1px;
+    border-radius: 2px;
+    width: 77px;
+    height: 40px;
+
+	top: 30px;
+}

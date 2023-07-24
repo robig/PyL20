@@ -86,6 +86,9 @@ body.connected #topbar #connection { color: green; }
 	top: 13px;
 	left: 21px;
 }
+#main .status.ready {
+	color: green;
+}
 #main .groups {
 	position: absolute;
 	top: 312px;

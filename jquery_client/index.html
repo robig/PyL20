@@ -9,7 +9,8 @@
     <link rel="stylesheet" type="text/css" href="assets/css/tracks.css">
     <link rel="stylesheet" type="text/css" href="assets/css/menu.css">
     <link rel="stylesheet" type="text/css" href="assets/css/fancyknob.css">
-	<script src="assets/js/jquery-3.4.1.min.js"></script>
+	<script src="assets/js/jquery-3.7.0.js"></script>
+    <script src="assets/js/jquery.svg.min.js"></script>
   </head>
   <body>
     
@@ -73,11 +74,10 @@
 	<template id="track_tpl">
         <div class="track">
 		    <div class="sig"></div>
-            <div class="eq"></div>
-            <div class="eq"></div>
-            <div class="indicator fx1"></div>
-            <div class="indicator fx2"></div>
-			<div class="indicator pan"></div>
+            <div class="eq controls"></div>
+            <div class="controls efx1"></div>
+            <div class="controls efx2"></div>
+			<div class="controls pan"></div>
             <button class="button rec" title="REC/PLAY">REC/PLAY</button>
 			<button class="button mute" title="Mute track">MUTE</button>
 			<button class="button solo" title="Solo">SOLO</button>
@@ -121,8 +121,8 @@
             </div>
 
             <div class="efx_section section">
-                <input class="knob fx1" type="range" min="0" max="60" value="0">
-                <input class="knob fx2" type="range" min="0" max="60" value="0">
+                <input class="knob efx1" type="range" min="0" max="60" value="0">
+                <input class="knob efx2" type="range" min="0" max="60" value="0">
             </div>
         </div>
     </template>
@@ -134,6 +134,7 @@
 
     <!-- inserting these scripts at the end to be able to use all the elements in the DOM -->
   	<script src="assets/js/binding.js"></script>
+    <script src="assets/js/controls.js"></script>
   	<script src="assets/js/main.js"></script>
   	<script src="assets/js/menu.js"></script>
     <script src="assets/js/jquery.scrollTo.min.js"></script>

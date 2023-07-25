@@ -142,7 +142,6 @@ def get_hex_line(line: int, data : bytearray):
     return f"{line:03d} {res} {data}"
 
 def raw_decode_sysex_message(sysex_data : bytearray):
-    offset=9
     line_len=9
     i = 0
     ret=""
@@ -300,13 +299,13 @@ def decode_sysex_track_info(sysex_data : bytearray):
     for i in range(0, num_tracks):
         f=offset + i
         d=sysex_data[f]
-        command["tracks"][i]["eq"]["fx1"]=int(d)
+        command["tracks"][i]["eq"]["efx1"]=int(d)
     # EQ: EFX2
     offset = 45 * line_len
     for i in range(0, num_tracks):
         f=offset + i
         d=sysex_data[f]
-        command["tracks"][i]["eq"]["fx2"]=int(d)
+        command["tracks"][i]["eq"]["efx2"]=int(d)
 
     # track volumes start on line 47
     offset=47*line_len
@@ -366,13 +365,16 @@ def create_sysex_track_settings(data):
         color = 0
         if "color" in data:
             color = int(data["color"])
+        #                    0   1   2   3   4   5   6   7   8
+        #                                            6=channel
+        #                                                7=?
         sysex = bytearray(b"\xF0\x52\x00\x00\x31\x02\x02\x09\x00" + b"\x00\x00\x00\x00\x00\x00\x00\x00\x00")
 
         print("Building sysex message... from", sysex)
         sysex[6] = chan
         print("+channel                      ", sysex)
-        sysex[8] = color
-        print("+color                        ", sysex)
+        #sysex[7] = color
+        #print("+color                        ", sysex)
         for i in range(9, 18):
             if len(value) > i-9:
                 sysex[i] = value[i-9]
@@ -380,7 +382,8 @@ def create_sysex_track_settings(data):
         print("sysex:                        ", sysex)
         return sysex
     if data.get("color"):
-        sysex = bytearray(b"\xF0\x52\x00\x00\x31\x03\x02\x06\x80\xF7")
+        #            5-byte   +                       6   7   8   9           
+        sysex = bytearray(MIDI_SYSEX_START) + MIDI_SYSEX_TRACK_COLOR + bytearray(b"\x02\x06\x80\xF7")
         chan = int(data["channel"])+1
         color= int(data["color"])
         sysex[6] = chan

@@ -106,10 +106,12 @@ async def ws_process_request(data):
         if data.get("cmd") == "testme3":
             await cmd_testme3()
         return
+    if device_status["connected"] != True:
+        logger.error("Discard message, because device is not connected: %s", str(data))
+        return False
     if data["context"] in WS_INPUT_VALID_CONTEXTS:
-    #if data["context"] == "track" or data["context"] == "main" or data["context"] == "track-settings" or  data["context"] == "FXtrack": # or data["context"] == "monitor":
         message_queue.put_nowait(data)
-    True
+    return True
 
 async def cmd_track_info():
     await message_queue.put({"raw": CMD_TRACK_INFO})

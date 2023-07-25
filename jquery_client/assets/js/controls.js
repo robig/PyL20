@@ -33,13 +33,14 @@ function drawEq(elem, trackData, settings) {
     var svg=$(elem).svg('get');
     svg.clear();
     var eq = trackData.eq;
-    var max = 60;
+    var settings=$.merge({"max":60, "width": null, "showPoints": false, "pointColor": "#c2ff274f", "lineColor": "#171f2a", "color": '#b8f824', 'width': 2}, settings | {});
+    var max = settings.max;
     var frq_max = 96;
     var frq_rel = eq.eq_mid-(max/2);
     var frq_steps=8; //mid_frq 0-96
     var frq_step_val = frq_max / frq_steps;
     var values=[eq.eq_lowcut, eq.eq_low];
-    var settings=$.merge({"showPoints": false, "pointColor": "#c2ff274f", "lineColor": "#171f2a", "color": '#b8f824', 'width': 2}, settings | {});
+    
     for(var i=0;i<frq_steps;i++){
         var diff = Math.max(1 - 1/2*Math.abs(i*frq_max/frq_steps - eq.eq_mid_frq)/frq_step_val, 0);
         var add= diff * frq_rel;
@@ -48,11 +49,11 @@ function drawEq(elem, trackData, settings) {
         values.push(v);
     }
     values.push(eq.eq_high);
-    
-    var width = 74;
-    var height = 40;
     var ystart=2;
     var xstart=2;
+    var width = settings.width | (elem.width() - xstart*2);
+    var height = settings.height | (elem.height() - ystart*2);
+    //console.log("drawEQ width="+ width+ " height="+height );
     var color=settings.color;
     var step = (width-ystart)/(values.length-1);
 
@@ -60,7 +61,7 @@ function drawEq(elem, trackData, settings) {
     for(var i=0; i<values.length; i++) {
         var x1=Math.floor(xstart + i*step);
         var y1=Math.floor(ystart +height -(values[i] * height / max) );
-        console.log(" x=" + x1 + " y=" +y1+ " yBottom="+ Math.floor(values[i] * height / max));
+        //console.log(" x=" + x1 + " y=" +y1+ " yBottom="+ Math.floor(values[i] * height / max));
         var y2=y1;
         if(i<values.length-1)
             y2=Math.floor(ystart +height -(values[i+1] * height / max) );
@@ -110,7 +111,7 @@ function drawEq(elem, trackData, settings) {
 }
 
 function addTrackVisuals(i, trackElem, trkData) {
-    console.log("addTrackVisuals on track #"+i);
+    //console.log("addTrackVisuals on track #"+i);
     var panElem=trackElem.find('.pan');
     panElem.svg();
 
@@ -122,4 +123,7 @@ function addTrackVisuals(i, trackElem, trkData) {
 
     var eqElem=trackElem.find('.eq');
     eqElem.svg();
+
+    var bigEQ=$('.graph_eq');
+    bigEQ.svg();
 }

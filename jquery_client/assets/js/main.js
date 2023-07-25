@@ -19,7 +19,7 @@ var mouseDown=false;
 var editMode = false;
 var track_selected = {"group": 0, "track": null};
 var fx_track_data = [];
-var eqKeys = ["eq_off", "phase", "pan", "eq_high", "eq_mid", "eq_mid_frq", "eq_low", "eq_lowcut"];
+var eqKeys = ["eq_off", "phase", "pan", "eq_high", "eq_mid", "eq_mid_frq", "eq_low", "eq_lowcut","efx1","efx2"];
 var unblock_bindings=[];
 
 //////////// for debugging/decoding ////////////////
@@ -539,7 +539,7 @@ function onLoad(config) {
 				bi.setRedrawCallback(evt=>{
 					var trk=$(evt.ident).attr("x-track");
 					var el=$('.track[x-track='+trk+'] .pan');
-					console.log("drawPan");
+					//console.log("drawPan");
 					drawPan(el, evt.value);
 				});
 			}
@@ -547,7 +547,7 @@ function onLoad(config) {
 				bi.setRedrawCallback(evt=>{
 					var trk=$(evt.ident).attr("x-track");
 					var el=$('.track[x-track='+trk+'] .efx1');
-					console.log("drawFx");
+					//console.log("drawFx");
 					drawFx(el, evt.value);
 				});
 			}
@@ -555,7 +555,7 @@ function onLoad(config) {
 				bi.setRedrawCallback(evt=>{
 					var trk=$(evt.ident).attr("x-track");
 					var el=$('.track[x-track='+trk+'] .efx2');
-					console.log("drawFx");
+					//console.log("drawFx");
 					drawFx(el, evt.value);
 				});
 			}
@@ -563,8 +563,12 @@ function onLoad(config) {
 				bi.setRedrawCallback(evt=>{
 					var trk=$(evt.ident).attr("x-track");
 					var el=$('.track[x-track='+trk+'] .eq');
-					console.log("drawEq");
-					drawEq(el, track_data[trk]);
+					//console.log("drawEq");
+					drawEq(el, track_data[trk]); //small EQ
+
+					// large EQ
+					var largeEQ=$('#channel_settings .tab[x-track='+trk+'] .graph_eq');
+					drawEq(largeEQ, track_data[trk], {"width":350});
 				});
 			}
 			//var knob=$("#channel_settings .tab[x-track="+i+"] .knob-surround .knob."+f)[0];

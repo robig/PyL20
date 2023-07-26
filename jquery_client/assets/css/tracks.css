@@ -251,15 +251,15 @@ input[type=range].slider {
     width: 77px;
     height: 23px;
 }
-.efx1 {
+.track .efx1 {
 	top: 94px;
 }
 
-.efx2 {
+.track .efx2 {
 	top: 141px;
 }
 
-.eq {
+.track .eq {
     background: #000;
     border: solid #2a2828 1px;
     border-radius: 2px;
@@ -267,4 +267,8 @@ input[type=range].slider {
     height: 40px;
 
 	top: 30px;
+}
+
+.track.eq_off .eq {
+	opacity: 50%;
 }

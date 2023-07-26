@@ -1,6 +1,5 @@
 #mixer {
 	/*background: url('../img/bg.png');*/
-	min-width: 1024px;
 	width: 100%;
 	height: 700px;
 	position: relative;
@@ -57,9 +56,19 @@ body.connected #topbar #connection { color: green; }
 	background-color: rgba(200, 200, 200, 0.84);
 	border: red solid 2px;
 }
-#debug textarea {
+#debug .value {
 	width: 100%; height: 100%;
 	font-family: 'Courier New', Courier, monospace;
+	background: #efefef;
+	color: black;
+	font-size: 8pt;
+	overflow: scroll;
+}
+#debug .line {
+	width: 100%;
+}
+#debug .line.plus, #debug .line.minus {
+	background-color: #ff8181;
 }
 
 #track_container {
@@ -103,9 +112,12 @@ body.connected #topbar #connection { color: green; }
 	margin-bottom: 17px;
 	font-size: 12px;
 	border: 0px;
+	background: url('../img/fader_mode_button.png');
+	color: #bdbdbd;
+	font-weight: bold;
 }
 #main .groups .button.active {
-	background: url('../img/button_red.png');
+	background-position-x: 43px;
 }
 
 

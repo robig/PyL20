@@ -140,6 +140,7 @@ def create_json_message(message):
                 chan=1
         elif message.control == MIDI_CC_FX_EFFECT:
             context="FX"
+            func="effect"
 
         # monitor volume:
         elif message.control == MIDI_CC_MONITOR:

@@ -19,37 +19,38 @@ var mouseDown=false;
 var editMode = false;
 var track_selected = {"group": 0, "track": null};
 var fx_track_data = [];
+var effect_data = [];
 var eqKeys = ["eq_off", "phase", "pan", "eq_high", "eq_mid", "eq_mid_frq", "eq_low", "eq_lowcut","efx1","efx2"];
 var unblock_bindings=[];
 
 //////////// for debugging/decoding ////////////////
 function showDebug(data) {
 	console.log(data);
-	if(data) $("#debug textarea").val(data);
-	$("#debug").show();
+	if(data) {
+		$("#debug .value").html(data.diff);
+		$("#debug .info").text(data.info);
+		$("#debug").show();
+	}
 }
 $("#debug .close").on("click", function() {$(this).parent().hide();});
-function printDiff(o1, o2) {
-	arr1=o1.split('\n')
-	arr2=o2.split('\n')
+function printDiff(arr1, arr2) {
 	ret=[]
 	diffLines=[]
 	for(var i=0;i<arr1.length && i<arr2.length;i++) {
 		var lineNumber = ("00" + i).slice (-3)
-		var d = "=";
+		var d = "<div class='line eq'>=";
 		if(arr1[i] != arr2[i]) {
-			d="+";
+			d="<div class='line plus'>+";
 			diffLines.push(lineNumber);
-			var oldline="-"+arr1[i];
-			ret.push(oldline+"\n");
+			var oldline="<div class='line minus'>-"+arr1[i];
+			ret.push(oldline+"</div>\n");
 		}
 		var line = d + arr2[i];
-		ret.push(line+"\n");
+		ret.push(line+"</div>\n");
 	}
-	//$("#debug").html(ret);
-	showDebug(ret);
+	
 	console.log("lines that are different: "+diffLines.length, diffLines);
-	return ret;
+	showDebug( {"diff": ret, info: diffLines} );
 }
 lastMessage=null;
 debugEnabled=false;
@@ -103,6 +104,7 @@ message_callbacks.push({
 					track_data[i].color = t.color;
 					track_data[i].mute = t.mute;
 					track_data[i].solo = t.solo;
+					track_data[i].rec = t.rec;
 					
 					if(t.values)
 						t.values.forEach((v,num) => {
@@ -257,7 +259,19 @@ message_callbacks.push(
 		}
 	}
 );
-
+message_callbacks.push(
+	{ // FX effect selection
+		"filter": function(cmd) {
+			return cmd.context=="FX"; //&& cmd.function == "effect";
+		},
+		"action": function(cmd) {
+			if(cmd.channel >= 0 && cmd.channel < 2) {
+				effect_data[cmd.channel]={"effect": cmd.value};
+				$("#effect_settings #efx"+cmd.channel+"-select").val(cmd.value);
+			}
+		}
+	}
+);
 
 
 function onLoad(config) {
@@ -281,14 +295,20 @@ function onLoad(config) {
 		t.attr("x-track", i);
 		t.on("click", function() {
 			var trk = parseInt($(this).attr("x-track"));
-			
+			var isFX = i>=monoTrackCount+stereoTrackCount;
 			$(this).parent().find(".track").removeClass("selected");
 			$(this).addClass("selected");
-			$("#channel_settings .tab").removeClass("active");
-			$("#channel_settings .tab[x-track="+trk+"]").addClass("active");
-			track_selected.track = trk;
+			if(isFX) {
+				$("#effect_settings").show();
+				track_selected.fx = trk - monoTrackCount+stereoTrackCount;
+			}else{
+				$("#channel_settings .tab").removeClass("active");
+				$("#channel_settings .tab[x-track="+trk+"]").addClass("active");
+				track_selected.track = trk;
+				track_selected.fx=0;
+			}
 		});
-		track_data[i] = {"number": ""+(i+1), "name": "CH"+(i+1), "color": 0, "value": 0, "channel": i, "group": g, "mute": 0, "solo": 0, "rec": 0, "groups":[], "eq": {"eq_off":0, "phase": 0, "pan":0, "eq_high":0 ,"eq_mid": 0, "eq_mid_frq":0, "eq_low":0, "eq_lowcut":0, "efx1": 0, "efx2":0 }};
+		track_data[i] = {"number": ""+(i+1), "name": "CH"+(i+1), "color": 0, "value": 0, "channel": i, "mute": 0, "solo": 0, "rec": 0, "groups":[], "eq": {"eq_off":0, "phase": 0, "pan":0, "eq_high":0 ,"eq_mid": 0, "eq_mid_frq":0, "eq_low":0, "eq_lowcut":0, "efx1": 0, "efx2":0 }};
 
 
 		addTrackVisuals(i, t, track_data[i]) //controls.js
@@ -530,6 +550,9 @@ function onLoad(config) {
 					lastChange = Date.now();
 					var func=$(e.ident).attr("x-func");
 					var trk=$(e.ident).attr("x-track");
+					if(func.startsWith("eq_") && track_data[trk].eq.eq_off) {
+						return;
+					}
 					var val=e.value;
 					console.log("Input changed (SEND TO SERVER) "+func+" for #"+trk+" to "+val);
 					sendToServer({"context": "track", "function": func, "value": val, "channel": track_data[trk].channel});
@@ -576,8 +599,42 @@ function onLoad(config) {
 			$(elInput).on('mouseup', function() {
 				mouseDown=false;
 			});
-		})
-		
+		}); //end foreach eq_func
+
+		var eq_buttons=["phase", "eq_off"];
+		eq_buttons.forEach( f=> {
+			var bi= new Binding({
+				object: track_data[i].eq,
+				property: f
+			});
+			var elInput = $("#channel_settings .tab[x-track="+i+"] button."+f)[0];
+			$(elInput).attr("x-func", f);
+			$(elInput).attr("x-track", i);
+			bi.addClassBinding(elInput, "x-value", "value");
+			bi.setIdentifier(elInput);
+			bi.addCallback( e=> {
+				var func=$(e.ident).attr("x-func");
+				var trk=$(e.ident).attr("x-track");
+				var val=e.value;
+				if(func=="eq_off"){
+					if(val==1) {
+						$("#channel_settings .tab[x-track="+trk+"]").addClass("eq_off");
+						$(".track[x-track="+trk+"]").addClass("eq_off");
+					}else{
+						$("#channel_settings .tab[x-track="+trk+"]").removeClass("eq_off");
+						$(".track[x-track="+trk+"]").removeClass("eq_off");
+					}
+				}
+			});
+			$(elInput).on("click", function(event) {
+				var func=$(this).attr("x-func");
+				var trk = $(this).attr("x-track");
+				var trackVal = track_data[trk].eq[func];
+				var val= trackVal == 0 ? 1 : 0;
+				console.log("Input changed "+func+" for #"+trk+" to "+val);
+				sendToServer({"context": "track", "function": func, "value": val, "channel": track_data[trk].channel});
+			});
+		});
 
 	}//End for track
 
@@ -735,6 +792,7 @@ function parseIncomingCommand(cmd) {
 function updateStatus(status) {
 	$('#main .status').text(status);
 	if(status=='ready') $("#main .status").addClass("ready");
+	else $("#main .status").removeClass("ready");
 }
 
 
@@ -813,6 +871,13 @@ $(window).keypress(function (e) {
 		$("#channel_settings .tab[x-track="+trk+"] .name.read").trigger("click");
 	}
 });
+
+function resize_track_container() {
+	$("#mixer #track_container").width($("body").width() - 275 );
+}
+
+$(window).resize(resize_track_container);
+resize_track_container();
 
 function ok_message(txt) {
 	$('#ok_message').innerText=txt;

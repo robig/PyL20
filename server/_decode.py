@@ -26,6 +26,7 @@ def convert_to_bytes(data):
     elif data["context"] == "track-settings":
         return create_sysex_track_settings(data)
 
+    channel = convert_channel_to_MIDI(channel)
     print("MIDI message built: ", [channel, control, value])
     if channel == 0 and control == 0:
         raise Exception("Invalid MIDI")
@@ -39,32 +40,36 @@ def need_sysex_end_message(data):
 
     return False
 
+def convert_channel_to_MIDI(chan):
+    if chan==16: # 1st stereo track
+        chan=0
+    if chan==17: # 2nd stereo track
+        chan=2
+    return chan
+
 # convert json dict to control value
 def get_CC_from_track_data(data):
     if "mute" in data:
         if data["channel"]>15:
-            data["channel"]-=16
             return MIDI_CC_TRACK_MUTE2
         return MIDI_CC_TRACK_MUTE
     if "solo" in data:
         if data["channel"]>15:
-            data["channel"]-=16
             return MIDI_CC_TRACK_SOLO2
         return MIDI_CC_TRACK_SOLO
     if "rec" in data:
         if data["channel"]>15:
-            data["channel"]-=16
             return MIDI_CC_TRACK_REC2
         return MIDI_CC_TRACK_REC
     if "function" in data:
         func = data["function"]
         if data["channel"] > 15:
-            data["channel"]-=16
             if func in WS_FUNCTION_TO_TRACK_CC2:
                 return WS_FUNCTION_TO_TRACK_CC2[func]
                 
         if func in WS_FUNCTION_TO_TRACK_CC:
             return WS_FUNCTION_TO_TRACK_CC[func]
+        raise Exception("unknown value for 'function': "+func)
     
     group = int(data["group"])
     if data["channel"]>15: #there can only be 16 channels (0..15)
@@ -144,12 +149,12 @@ def get_hex_line(line: int, data : bytearray):
 def raw_decode_sysex_message(sysex_data : bytearray):
     line_len=9
     i = 0
-    ret=""
+    ret=[]
     buffer=bytearray()
     while i < len(sysex_data):
         buffer.append(sysex_data[i])
-        if i>0 and (i) % line_len == 0:
-            ret += get_hex_line(i, buffer) + "\n"
+        if i>0 and (i % line_len) == 0:
+            ret.append(get_hex_line(i, buffer) )
             buffer.clear()
         i += 1
     return ret
@@ -177,7 +182,7 @@ def decode_sysex_track_color(sysex_data : bytearray):
 def decode_sysex_track_rename(sysex_data : bytearray):
     offset=6
     chan = int(sysex_data[offset]) -1
-    offset+=1
+    offset+=2
     end=offset+9
     d = sysex_data[offset:end]
     newname=d.decode('ascii', errors='ignore').replace("\x00","")

@@ -35,6 +35,11 @@
     width: 129px;
     height: 32px;
 }
+#menu li.effects {
+    background: url('../img/menu_effects.png');
+    width: 94px;
+    height: 32px;
+}
 
 
 
@@ -46,6 +51,8 @@
     width: 742px;
     height: 220px;
     z-index: 50;
+
+    background: #2b2b2a;
 }
 
 #channel_settings {
@@ -90,6 +97,12 @@
     margin-top: 25px;
 }
 
+#channel_settings .button.value1 {
+	background: url('../img/button_red.png');
+}
+#channel_settins .tap.eq_off .eq_section{
+    opacity: 50%;
+}
 
 #channel_settings .eq_section {
     width: 419px;

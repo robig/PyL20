@@ -16,7 +16,7 @@
     
 	<div id="error_message" class="alert alert-danger" role="alert" style="display:none;"></div>
 	<div id="ok_message" class="alert alert-success" role="alert" style="display:none;"></div>
-    <div id="debug" class="modal" style="display:none;"><div class="close">X</div><textarea class="value"></textarea></div>
+    <div id="debug" class="modal" style="display:none;"><div class="close">X</div><div class="info"></div><div class="value"></div></div>
     <div id="colorpicker" class="modal" style="display:none;"><div class="close">X</div>
         <ul>
             <li class="color0" x-value="0"></li>
@@ -38,12 +38,17 @@
             <li class="connection"></li>
             <li class="settings"></li>
             <li class="channel"></li>
+            <li class="effects"></li>
         </ul>
     </div>
     <div id="settings" class="top overlay" style="display:none;">
 
     </div>
     <div id="channel_settings" class="top overlay" style="display:none;"></div>
+    <div id="effect_settings" class="top overlay" style="display:none;">
+        <div class="fx1"></div>
+        <div class="fx2"></div>
+    </div>
 	
     <div id="mixer">
         <div id="track_container"></div>

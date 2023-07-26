@@ -1,6 +1,7 @@
 body {
     background: URL('../jquery_client/assets/img/bg.png');
-
+    background-repeat: no-repeat;
+    background-color: #000;
 }
 
 body > div.controls {
@@ -49,4 +50,10 @@ body > div.controls.eq {
     border-radius: 2px;
     width: 77px;
     height: 40px;
+}
+
+.knob {
+    position: absolute;
+    top: 110px;
+    left: 779px;
 }

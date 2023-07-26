@@ -157,3 +157,20 @@ function setEq(v) {
     $('.eq').svg({onLoad: drawEq}); 
 }
 $('.eq').svg({onLoad: drawEq});
+
+$(function() {
+    $(".knob").knob({
+        'displayInput': true,
+        'width': 50,
+        'height': 50,
+        'class': 'knob',
+        'knobColor': '#6c6c6c',
+        'knobRadius': 23,
+
+        'change': v=>{
+            data.eq.eq_mid=v;
+            var svg=$('.eq').svg('get');
+            svg.clear(); drawEq(svg);
+        }
+    });
+});

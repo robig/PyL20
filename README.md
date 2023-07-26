@@ -43,14 +43,15 @@ pip3 install websockets
 ## Start the server
 
 ```bash
-cd server && python3 PyL20_osx.py
+cd server && python3 PyL20_osx.py -w 8001
 ```
+This will start the server including a basic http server on port 8001 to connect to.
 
 (Note: Currently for Linux/Windows there must be pairing enabled in the script)
 
 ## JQuery client
-For the client there probably is a webserver required.
-You can use a simple python server:
+For the client there is a webserver required.
+You can use the included python webserver (from the example above) or a dedicated one.
 
 ```bash
 cd jquery_client

@@ -125,5 +125,13 @@ body.connected #topbar #connection { color: green; }
 	position: relative;
 	left: 9px;
 	top:  64px;
+	padding-left: 2px;
 }
 
+.cknob {
+	display: inline-block;
+	position: relative;
+
+	margin: 0px 17px;
+	margin-top: 44px;
+}

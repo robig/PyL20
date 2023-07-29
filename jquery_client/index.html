@@ -10,7 +10,8 @@
     <link rel="stylesheet" type="text/css" href="assets/css/menu.css">
     <link rel="stylesheet" type="text/css" href="assets/css/fancyknob.css">
 	<script src="assets/js/jquery-3.7.0.js"></script>
-    <script src="assets/js/jquery.svg.min.js"></script>
+    <script src="assets/js/jquery.svg.js"></script>
+    <script src="assets/js/jquery.knob.js"></script>
   </head>
   <body>
     
@@ -110,7 +111,7 @@
             </div>
 
             <div class="eq_left_section section">
-                <input class="knob pan" type="range" min="0" max="100" value="50">
+                <input class="knob pan" type="text" min="0" max="100" value="50">
                 <button class="button phase">0</button>
                 <button class="button eq_off">EQ OFF</button>
                 
@@ -118,26 +119,27 @@
 
             <div class="eq_section section">
                 <div class="graph_eq"></div>
-                <input class="knob eq_lowcut" type="range" min="0" max="56" value="0">
-                <input class="knob eq_low" type="range" min="0" max="60" value="0">
-                <input class="knob eq_mid" type="range" min="0" max="60" value="0">
-                <input class="knob eq_mid_frq" type="range" min="0" max="96" value="0">
-                <input class="knob eq_high" type="range" min="0" max="60" value="0">
+                <input class="knob eq_lowcut" type="text" min="0" max="56" value="0">
+                <input class="knob eq_low" type="text" min="0" max="60" value="0">
+                <input class="knob eq_mid" type="text" min="0" max="60" value="0">
+                <input class="knob eq_mid_frq" type="text" min="0" max="96" value="0">
+                <input class="knob eq_high" type="text" min="0" max="60" value="0">
             </div>
 
             <div class="efx_section section">
-                <input class="knob efx1" type="range" min="0" max="60" value="0">
-                <input class="knob efx2" type="range" min="0" max="60" value="0">
+                <input class="knob efx1" type="text" min="0" max="60" value="0">
+                <input class="knob efx2" type="text" min="0" max="60" value="0">
             </div>
         </div>
     </template>
 
     
 	<template id="monitor_tpl">
-        <input class="knob" type="range" min="0" max="118" value="0">
+        <input class="knob" type="text" min="0" max="118" value="0">
     </template>
 
     <!-- inserting these scripts at the end to be able to use all the elements in the DOM -->
+    <script src="assets/js/data_formatter.js"></script>
   	<script src="assets/js/binding.js"></script>
     <script src="assets/js/controls.js"></script>
   	<script src="assets/js/main.js"></script>

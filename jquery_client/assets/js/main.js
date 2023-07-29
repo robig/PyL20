@@ -23,6 +23,17 @@ var effect_data = [];
 var eqKeys = ["eq_off", "phase", "pan", "eq_high", "eq_mid", "eq_mid_frq", "eq_low", "eq_lowcut","efx1","efx2"];
 var unblock_bindings=[];
 
+
+function init_knobs(el){
+    $(el).find(".knob").knob({
+        'displayInput': true,
+        'width': 50,
+        'height': 50,
+        'class': 'cknob',
+        'knobColor': '#6c6c6c',
+        'knobRadius': 23});
+}
+
 //////////// for debugging/decoding ////////////////
 function showDebug(data) {
 	console.log(data);
@@ -295,17 +306,30 @@ function onLoad(config) {
 		t.attr("x-track", i);
 		t.on("click", function() {
 			var trk = parseInt($(this).attr("x-track"));
-			var isFX = i>=monoTrackCount+stereoTrackCount;
+			var isFX = trk>=monoTrackCount+stereoTrackCount;
 			$(this).parent().find(".track").removeClass("selected");
 			$(this).addClass("selected");
 			if(isFX) {
 				$("#effect_settings").show();
+				$("#channel_settings").hide();
 				track_selected.fx = trk - monoTrackCount+stereoTrackCount;
 			}else{
 				$("#channel_settings .tab").removeClass("active");
 				$("#channel_settings .tab[x-track="+trk+"]").addClass("active");
 				track_selected.track = trk;
 				track_selected.fx=0;
+			}
+		});
+		t.on("dblclick", function() {
+			var trk = parseInt($(this).attr("x-track"));
+			var isFX = trk>=monoTrackCount+stereoTrackCount;
+			if(isFX) {
+				$("#effect_settings").show();
+				$("#channel_settings").hide();
+				track_selected.fx = trk - monoTrackCount+stereoTrackCount;
+			}else{
+				$("#effect_settings").hide();
+				$("#channel_settings").show();
 			}
 		});
 		track_data[i] = {"number": ""+(i+1), "name": "CH"+(i+1), "color": 0, "value": 0, "channel": i, "mute": 0, "solo": 0, "rec": 0, "groups":[], "eq": {"eq_off":0, "phase": 0, "pan":0, "eq_high":0 ,"eq_mid": 0, "eq_mid_frq":0, "eq_low":0, "eq_lowcut":0, "efx1": 0, "efx2":0 }};
@@ -500,6 +524,7 @@ function onLoad(config) {
 		nameBind.addBinding(nameRead[0], "innerHTML");
 		nameBind.addBinding(nameWrite[0], "value");
 		colorBind.addClassBinding(settings.find(".color")[0], "x-value", "color");
+		init_knobs(settings);
 		settings.find(".color").on("click", e=>{
 			showModal("colorpicker");
 			var trk = $(e.target).parent().parent().attr("x-track");
@@ -536,24 +561,21 @@ function onLoad(config) {
 				object: track_data[i].eq,
 				property: f
 			});
-			var elInput = $("#channel_settings .tab[x-track="+i+"] input."+f)[0];
-			$(elInput).attr("x-func", f);
-			$(elInput).attr("x-track", i);
-			bi.addBinding(elInput, "value", "input");
-			bi.setTrigger("change");
-			bi.setIdentifier(elInput);
-			bi.blocked=true; // block events now
-			unblock_bindings.push(bi); // unblock later
-			bi.addCallback( e=> {
+			var elInput = $("#channel_settings .tab[x-track="+i+"] input."+f);
+			elInput.attr("x-func", f);
+			elInput.attr("x-track", i);
+			bi.addBinding(elInput[0], "value", "input");
+			bi.setTrigger("update");
+			bi.setIdentifier(elInput[0]);
+			
+			elInput.on("change", e=>{
 				const now = Date.now();
 				if((now - lastChange) > 100 ) { //DEbounce
 					lastChange = Date.now();
-					var func=$(e.ident).attr("x-func");
-					var trk=$(e.ident).attr("x-track");
-					if(func.startsWith("eq_") && track_data[trk].eq.eq_off) {
-						return;
-					}
-					var val=e.value;
+					var target=e.target;
+					var func=$(target).attr("x-func");
+					var trk=$(target).attr("x-track");
+					var val=$(target).val();
 					console.log("Input changed (SEND TO SERVER) "+func+" for #"+trk+" to "+val);
 					sendToServer({"context": "track", "function": func, "value": val, "channel": track_data[trk].channel});
 				}
@@ -565,6 +587,7 @@ function onLoad(config) {
 					//console.log("drawPan");
 					drawPan(el, evt.value);
 				});
+				elInput.trigger("configure",{format: format_pan});
 			}
 			if(f=="efx1") {
 				bi.setRedrawCallback(evt=>{
@@ -573,6 +596,7 @@ function onLoad(config) {
 					//console.log("drawFx");
 					drawFx(el, evt.value);
 				});
+				elInput.trigger("configure",{format: format_fxsend10});
 			}
 			if(f=="efx2") {
 				bi.setRedrawCallback(evt=>{
@@ -581,6 +605,7 @@ function onLoad(config) {
 					//console.log("drawFx");
 					drawFx(el, evt.value);
 				});
+				elInput.trigger("configure",{format: format_fxsend10});
 			}
 			if(f.startsWith("eq_")) {
 				bi.setRedrawCallback(evt=>{
@@ -591,12 +616,15 @@ function onLoad(config) {
 
 					// large EQ
 					var largeEQ=$('#channel_settings .tab[x-track='+trk+'] .graph_eq');
-					drawEq(largeEQ, track_data[trk], {"width":350});
+					drawEq(largeEQ, track_data[trk], {"width":365});
 				});
+				if(f=="eq_mid_frq") elInput.trigger("configure",{format: format_eq_mid_frq});
+				if(f=="eq_lowcut") elInput.trigger("configure",{format: format_eq_lowcut});
+				else elInput.trigger("configure",{format: format_min_max_eq15});
 			}
 			//var knob=$("#channel_settings .tab[x-track="+i+"] .knob-surround .knob."+f)[0];
-			$(elInput).on('mousedown', function() {mouseDown=true;});
-			$(elInput).on('mouseup', function() {
+			elInput.on('mousedown', function() {mouseDown=true;});
+			elInput.on('mouseup', function() {
 				mouseDown=false;
 			});
 		}); //end foreach eq_func
@@ -655,6 +683,14 @@ function onLoad(config) {
 			sendToServer({"context": "main", "value": main_data.master.value, "channel": 10});
 		}
 	});
+	$(elSlider).on('mousedown', function() {mouseDown=true;});
+	$(elSlider).on('mouseup', function() {
+		mouseDown=false;
+		sendToServer({"context": "main", "value": main_data.master.value, "channel": 10});
+	});
+	$(elSlider).on('mousewheel DOMMouseScroll', function(e) {
+		sendToServer({"context": "main", "value": main_data.master.value, "channel": 10});
+	});
 	// MUTE button
 	var el = t.find(".mute");
 	b = new Binding({
@@ -684,12 +720,22 @@ function onLoad(config) {
 			property: "value"
 		});
 		b.addBinding(moni[0], "value", "input");
-		b.setTrigger("change");
+		b.setTrigger("update");
 		b.setIdentifier(m);
-		b.blocked=true;
+		//b.blocked=true;
 		unblock_bindings.push(b);
-		//$(moni).on("change", e=> {
-		b.addCallback( evt=>{
+		$(moni).on("change", e=> {
+			const now = Date.now();
+			var target=e.target;
+			if((now - lastChange) > 100 ) { //DEbounce
+				lastChange = Date.now();
+				var chan=$(target).attr("x-monitor");
+				var val=$(target).val();
+				console.log("Monitor changed (sendToServer) for #"+chan+" to "+val);
+				sendToServer({"context": "monitor", "function":"volume", "value": val, "channel": chan});
+			}
+		});
+		/*b.addCallback( evt=>{
 			const now = Date.now();
 			if((now - lastChange) > 100 ) { //DEbounce
 				lastChange = Date.now();
@@ -698,7 +744,7 @@ function onLoad(config) {
 				console.log("Monitor changed (sendToServer) for #"+chan+" to "+val);
 				sendToServer({"context": "monitor", "function":"volume", "value": val, "channel": chan});
 			}
-		});
+		});*/
 	}
 
 	// connect to ws server:
@@ -707,11 +753,11 @@ function onLoad(config) {
 
 document.body.onload = function() {
 	setTimeout(function() {
-		$(".knob").fancyknob();
+		/*$(".knob").fancyknob();
 		unblock_bindings.forEach(u=>{
 			u.blocked=false;
 		});
-		console.log("unblocked");
+		console.log("unblocked");*/
 	}, 500);
 }
 

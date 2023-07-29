@@ -25,6 +25,7 @@ function Binding(b) {
                 binding.element[binding.attribute] = v;
             }
             if(_this.trigger) {
+                //console.log("TRIGGER: "+_this.trigger+" on ", binding.element);
                 $(binding.element).trigger(_this.trigger);
             }
         }

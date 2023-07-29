@@ -39,7 +39,9 @@ function drawEq(elem, trackData, settings) {
     var frq_rel = eq.eq_mid-(max/2);
     var frq_steps=8; //mid_frq 0-96
     var frq_step_val = frq_max / frq_steps;
-    var values=[eq.eq_lowcut, eq.eq_low];
+
+    var locut = 30-eq.eq_lowcut/2; //mapped differently
+    var values=[locut, eq.eq_low];
     
     for(var i=0;i<frq_steps;i++){
         var diff = Math.max(1 - 1/2*Math.abs(i*frq_max/frq_steps - eq.eq_mid_frq)/frq_step_val, 0);
@@ -72,7 +74,6 @@ function drawEq(elem, trackData, settings) {
     }
 
     //Smoothen
-    //console.log("==========================");
     svg.line(null, 0,ystart+height/2, width, ystart+height/2, {stroke: settings.lineColor});
 
     var path = svg.createPath();
@@ -87,26 +88,23 @@ function drawEq(elem, trackData, settings) {
         //if(i>0) path=path.smoothQ(from[0], from[1]);
         path=path.move(from[0], from[1]);
         path=path.curveQ(cent[0], cent[1], to[0], to[1]);
+        //console.log("curveQ from #"+i+" to #"+(i+1));
         //console.log("i="+i + "%"+(i%4))
         if(settings.showPoints) {
             svg.circle(null, cent[0],cent[1], 2, {stroke: settings.pointColor});
             svg.circle(null, to[0],to[1], 2, {stroke: settings.pointColor});
         }
     }
-    if(points[i]) {
-        path=path.smoothQ(points[i][0], points[i][1]);
-        //path=path.curveQ(points[i][0], points[i][1], points[i][0], points[i][1]);
-
-        if(settings.showPoints) svg.circle(null, points[i][0], points[i][1], 2, {stroke: 'yellow'});
+    if(points[i-1]) {
+        //path=path.smoothQ(points[i-1][0], points[i-1][1]);
+        path=path.curveQ(points[i-1][0], points[i-1][1], points[i-1][0]+1, points[i-1][1]);
+        //console.log("curveQ from #"+(i-1)+" to #"+(i-1));
+        if(settings.showPoints) svg.circle(null, points[i-1][0], points[i-1][1], 2, {stroke: settings.pointColor});
         //svg.polyline(null, more_points, {stroke: color, 'strokeWidth': 2});
     }
 
     svg.path(null, 
-        path/*.move(50, 90)
-        .curveC(0, 90, 0, 30, 50, 30) 
-        .line(150, 30)
-        .curveC(200, 30, 200, 90, 150, 90)
-        .close(*/,  
+        path,  
         {fill: 'none', stroke: color, strokeWidth: settings.width});
 }
 
@@ -125,5 +123,5 @@ function addTrackVisuals(i, trackElem, trkData) {
     eqElem.svg();
 
     var bigEQ=$('.graph_eq');
-    bigEQ.svg();
+    bigEQ.svg({"width":360});
 }

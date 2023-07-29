@@ -31,7 +31,7 @@ class Ws:
         
         status = "unknown"
         if self.device_status.get("connected"):
-            status = self.device_status.get("connected")
+            status = "ready" if self.device_status.get("connected") else "search"
         await websocket.send(f"{{\"status\": \"{status}\"}}")
         while websocket.open:
             try:

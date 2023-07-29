@@ -4,6 +4,13 @@
  *
  * Version: 1.2.12
  * Requires: jQuery v1.7+
+ * 
+ * Enhanced by robig.net
+ * V1.0
+ * Features:
+ * - center knob with color, value above
+ * - css classes for styling
+ * - update using "update" event on input element, will be blocked when touching/mouse moved
  *
  * Copyright (c) 2012 Anthony Terrien
  * Under MIT License (http://www.opensource.org/licenses/mit-license.php)
@@ -56,6 +63,7 @@
 
         this.o = null; // array of options
         this.$ = null; // jQuery wrapped element
+        this.$d = null;
         this.i = null; // mixed HTMLInputElement or array of HTMLInputElement
         this.g = null; // deprecated 2D graphics context for 'pre-rendering'
         this.v = null; // value ; mixed array or integer
@@ -80,6 +88,19 @@
         this.relativeWidth = false;
         this.relativeHeight = false;
         this.$div = null; // component div
+        this.blockUpdate=false;
+
+        this.optVal = function(el,name, def) {
+            if(el && el.data) {
+                var val = el.data(name);
+                if(val!==undefined) return val;
+            }
+            if(el && el.attr) {
+                var val = el.attr(name);
+                if(val!==undefined) return val;
+            }
+            return def;//default
+        };
 
         this.run = function () {
             var cf = function (e, conf) {
@@ -99,8 +120,10 @@
             //console.log(this.$);
             this.o = $.extend({
                     // Config
-                    min: this.$.data('min') !== undefined ? this.$.data('min') : 0,
-                    max: this.$.data('max') !== undefined ? this.$.data('max') : 100,
+                    //min: this.$.data('min') !== undefined ? this.$.data('min') : 0,
+                    min: this.optVal(this.$, "min", 0),
+                    max: this.optVal(this.$, "max", 0),
+                    //max: this.$.data('max') !== undefined ? this.$.data('max') : (100),
                     stopper: true,
                     readOnly: this.$.data('readonly') || (this.$.attr('readonly') === 'readonly'),
 
@@ -120,7 +143,7 @@
                     font: this.$.data('font') || 'Arial',
                     fontWeight: this.$.data('font-weight') || 'bold',
                     texty: this.$.data('texty') || 0,
-                    inline: false,
+                    inline: null,
                     step: this.$.data('step') || 1,
                     rotation: this.$.data('rotation') || 20,
 
@@ -191,7 +214,9 @@
 
             }
 
-            !this.o.displayInput && this.$.hide();
+            //!this.o.displayInput && 
+            this.$.hide();
+            this.$d = $(document.createElement("div")).addClass("knob-display");
 
             // adds needed DOM elements (canvas, div)
             this.$c = $(document.createElement('canvas')).attr({
@@ -202,13 +227,13 @@
             // wraps all elements in a div
             // add to DOM before Canvas init is triggered
             this.$div = $('<div style="'
-                + (this.o.inline ? 'display:inline;' : '')
+                + (this.o.inline!==null ? 'display:'+(this.o.inline?'inline':'block')+';' : '')
                 + 'width:' + this.o.width + 'px;height:' + this.o.height + 'px;'
                 + '"'
                 + (this.o.class ? ' class="' + this.o.class + '"' : '')
                 + '></div>');
 
-            this.$.wrap(this.$div).before(this.$c);
+            this.$.wrap(this.$div).before(this.$c).before(this.$d);
             this.$div = this.$.parent();
 
             if (typeof G_vmlCanvasManager !== 'undefined') {
@@ -266,7 +291,9 @@
 
             this.isInit = true;
 
-            this.$.val(this.o.format(this.v));
+            //this.$.val(this.o.format(this.v));
+            this.$.val(this.v);
+            this.$d.html(this.o.format(this.v));
             this._draw();
 
             return this;
@@ -336,9 +363,9 @@
 
                 if (v == s.cv) return;
 
-                if (s.cH && s.cH(v) === false) return;
-
-                s.change(s._validate(v));
+                if (s.cH && s.cH(s.$, v) === false) return;
+                s.blockUpdate=true;
+                s.change(s._validate(v), true);
                 s._draw();
             };
 
@@ -355,6 +382,7 @@
                     "touchend.k",
                     function () {
                         k.c.d.unbind('touchmove.k touchend.k');
+                        s.blockUpdate=false;
                         s.val(s.cv);
                     }
                 );
@@ -368,9 +396,9 @@
 
                 if (v == s.cv) return;
 
-                if (s.cH && (s.cH(v) === false)) return;
-
-                s.change(s._validate(v));
+                if (s.cH && (s.cH(s.$, v) === false)) return;
+                s.blockUpdate=true;
+                s.change(s._validate(v), true);
                 s._draw();
             };
 
@@ -398,6 +426,7 @@
                     "mouseup.k",
                     function (e) {
                         k.c.d.unbind('mousemove.k mouseup.k keyup.k');
+                        s.blockUpdate=false;
                         s.val(s.cv);
                     }
                 );
@@ -525,7 +554,7 @@
                 bgColor: this.$.data('bgcolor') || '#6f6f6f',
                 angleOffset: this.$.data('angleoffset') || 180+45,
                 angleArc: this.$.data('anglearc') || 275,
-                inline: true
+                inline: null
             }, this.o);
         };
 
@@ -542,7 +571,9 @@
 
                 this.cv = this.o.stopper ? max(min(v, this.o.max), this.o.min) : v;
                 this.v = this.cv;
-                this.$.val(this.o.format(this.v));
+                //this.$.val(this.o.format(this.v));
+                this.$.val(this.v);
+                this.$d.html(this.o.format(this.v));
                 this._draw();
             } else {
                 return this.v;
@@ -581,8 +612,9 @@
             // bind MouseWheel
             var s = this, mwTimerStop,
                 mwTimerRelease,
-                mw = function (e) {
+                mw = function (e) { //MOUSEWHEEL
                     e.preventDefault();
+                    s.blockUpdate=true;
 
                     var ori = e.originalEvent,
                         deltaX = ori.detail || ori.wheelDeltaX,
@@ -590,29 +622,37 @@
                         v = s._validate(s.o.parse(s.$.val()))
                             + (
                                 deltaX > 0 || deltaY > 0
-                                ? s.o.step
-                                : deltaX < 0 || deltaY < 0 ? -s.o.step : 0
+                                ? -s.o.step
+                                : deltaX < 0 || deltaY < 0 ? +s.o.step : 0
                               );
 
                     v = max(min(v, s.o.max), s.o.min);
 
-                    s.val(v, false);
+                    //s.val(v, false);
+                    s.change(s._validate(v), true);
 
-                    if (s.rH) {
+                    if (true || s.rH) {
                         // Handle mousewheel stop
                         clearTimeout(mwTimerStop);
                         mwTimerStop = setTimeout(function () {
-                            s.rH(v);
+                            if(s.rH) s.rH(v);
+                            s.change(s._validate(v), true);
+                            s.blockUpdate=false;
                             mwTimerStop = null;
-                        }, 100);
+                        }, 300);
 
                         // Handle mousewheel releases
                         if (!mwTimerRelease) {
                             mwTimerRelease = setTimeout(function () {
-                                if (mwTimerStop)
-                                    s.rH(v);
+                                console.log("Mousewheel release");
+                                if (mwTimerStop){
+                                    if(s.rH) s.rH(v);
+                                    //s.val(v, true);
+                                    s.change(s._validate(v), true);
+                                    
+                                }
                                 mwTimerRelease = null;
-                            }, 200);
+                            }, 500);
                         }
                     }
                 },
@@ -655,7 +695,7 @@
                                 var v = s.o.parse(s.$.val()) + kv[kc] * m;
                                 s.o.stopper && (v = max(min(v, s.o.max), s.o.min));
 
-                                s.change(s._validate(v));
+                                s.change(s._validate(v), true);
                                 s._draw();
 
                                 // long time keydown speed-up
@@ -681,6 +721,21 @@
                             (s.$.val() > s.o.max && s.$.val(s.o.max))
                             || (s.$.val() < s.o.min && s.$.val(s.o.min));
                         }
+                    }
+                )
+                .bind(
+                    "update",// incoming value cnage
+                    function(e) {
+                        if(s.blockUpdate){
+                            console.log("UPDATE blocked");
+                            return;
+                        }
+                        console.log("UPDATE event received");
+                        var v = s.o.parse(s.$.val());
+                        s.o.stopper && (v = max(min(v, s.o.max), s.o.min));
+
+                        s.change(s._validate(v),false);
+                        s._draw();
                     }
                 );
 
@@ -721,8 +776,12 @@
                 2
             ) + 2;
 
-            this.o.displayInput
-                && this.i.css({
+            if(!this.o.displayInput) this.i.css({
+                    'width': '0px',
+                    'visibility': 'hidden'
+                });
+            else this.i.addClass("knob-value");
+                /*this.i.css({
                         'width' : ((this.w / 2 + 4) >> 0) + 'px',
                         'height' : ((this.w / 3) >> 0) + 'px',
                         'position' : 'absolute',
@@ -739,12 +798,15 @@
                         }) || this.i.css({
                             'width': '0px',
                             'visibility': 'hidden'
-                        });
+                        });*/
         };
 
-        this.change = function (v) {
+        this.change = function (v, up) {
             this.cv = v;
-            this.$.val(this.o.format(v));
+            //this.$.val(this.o.format(v));
+            this.$.val(v);
+            this.$d.html(this.o.format(v));
+            if(up) this.$.trigger("change");
         };
 
         this.angle = function (v) {
@@ -802,7 +864,6 @@
             c.arc(this.xy, this.xy, this.radius, a.s, a.e, a.d);
             c.stroke();
 
-            console.log("o", this.o)
             var wi=c.lineWidth;
             // Knob:
             c.beginPath();

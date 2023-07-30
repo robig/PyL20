@@ -150,8 +150,14 @@ async def received_data(sender: BleakGATTCharacteristic, data: bytearray):
         await ws_task.send_to_clients(create_json_message(msg))
         return
     except Exception as e:
+        # no midi message
+        if parse_non_midi_message(data):
+            await ws_task.send_to_clients(parse_non_midi_message(data))
+            return
+        
         logger.error("No MIDI message or parse error: "+ str(e))
-        traceback.print_exc()
+        #traceback.print_exc()
+        print_hex_line(data)
     
     if data[2] == MIDI_SYSEX_START:
         print("SysEx START")

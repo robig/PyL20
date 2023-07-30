@@ -628,8 +628,8 @@
 
                     v = max(min(v, s.o.max), s.o.min);
 
-                    //s.val(v, false);
-                    s.change(s._validate(v), true);
+                    s.val(v, false);
+                    //s.change(s._validate(v), true);
 
                     if (true || s.rH) {
                         // Handle mousewheel stop
@@ -639,10 +639,10 @@
                             s.change(s._validate(v), true);
                             s.blockUpdate=false;
                             mwTimerStop = null;
-                        }, 300);
+                        }, 200);
 
                         // Handle mousewheel releases
-                        if (!mwTimerRelease) {
+                        /*if (!mwTimerRelease) {
                             mwTimerRelease = setTimeout(function () {
                                 console.log("Mousewheel release");
                                 if (mwTimerStop){
@@ -653,7 +653,7 @@
                                 }
                                 mwTimerRelease = null;
                             }, 500);
-                        }
+                        }*/
                     }
                 },
                 kval,

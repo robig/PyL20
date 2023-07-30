@@ -1,18 +1,24 @@
 $("#menu .channel").on("click", e => {
-    $("#channel_settings").toggle();
-    $("#effect_settings").hide();
     activateMenu("channel");
 });
 
-$("#menu .effects").on("click", e => {
-    $("#channel_settings").hide();
-    $("#effect_settings").toggle();
-    activateMenu("effects");
+$("#menu .effect").on("click", e => {
+    activateMenu("effect");
 });
 
 function activateMenu(name) {
+    var all=["channel", "effect"];
+    var isActive=$("#menu li."+name).hasClass("active");
+
     $("#menu li").removeClass("active");
-    $("#menu li."+name).addClass("active");
+    all.forEach(n=>{
+        $("#"+n+"_settings").hide();    
+    })
+    
+    if(!isActive) {
+        $("#menu li."+name).addClass("active");  
+        $("#"+name+"_settings").show();
+    }
 }
 
 
@@ -42,23 +48,78 @@ $("document").ready(function() {
     var fx1=$("#effect_settings .fx1");
     var fx2=$("#effect_settings .fx2");
 
-    var html='<select name="efx1" id="efx0-select">';
+    var html='<div class="name">EFX1</div>';
+    html+='<select name="efx1" id="efx0-select">';
     for(var i=0;i<efx1_selection.length;i++) {
         html+='<option value="'+i+'">'+efx1_selection[i]+'</option>';
     }
     html+='</select>';
 
-    html+='<input type="text" value="0" max="60" class="knob fx1_param1">';
-    html+='<input type="text" value="0" max="60" class="knob fx1_param2">';
+    html+='<input type="text" value="0" max="100" class="knob fx1_param1">';
+    html+='<input type="text" value="0" max="100" class="knob fx1_param2">';
 
     fx1.html(html)
 
-    html='<select name="efx2" id="efx1-select">';
+    html='<div class="name">EFX2</div>';
+    html+='<select name="efx2" id="efx1-select">';
     for(var i=0;i<efx2_selection.length;i++) {
         html+='<option value="'+i+'">'+efx2_selection[i]+'</option>';
     }
     html+='</select>';
+
+    html+='<input type="text" value="0" max="100" class="knob fx2_param1">';
+    html+='<input type="text" value="0" max="100" class="knob fx2_param2">';
+
     fx2.html(html)
+
+    var b = new Binding({
+        object: effect_data[0],
+        property: "effect"
+    });
+    b.addBinding($("#efx0-select")[0], "value");
+    $("#efx0-select").on("change", e=>{
+        var val=$(e.target).val();
+        sendToServer({"context":"FX", "function":"effect", "value": val, "channel":0});
+    });
+
+    b = new Binding({
+        object: effect_data[1],
+        property: "effect"
+    });
+    b.addBinding($("#efx1-select")[0], "value");
+    $("#efx1-select").on("change", e=>{
+        var val=$(e.target).val();
+        sendToServer({"context":"FX", "function":"effect", "value": val, "channel":1});
+    });
+
+    b = new Binding({
+        object: effect_data[0],
+        property: "param1"
+    });
+    b.addBinding($(".fx1_param1")[0], "value");
+    b.setTrigger("update");
+
+    b = new Binding({
+        object: effect_data[0],
+        property: "param2"
+    });
+    b.addBinding($(".fx1_param2")[0], "value");
+    b.setTrigger("update");
+
+    b = new Binding({
+        object: effect_data[1],
+        property: "param1"
+    });
+    b.addBinding($(".fx2_param1")[0], "value");
+    b.setTrigger("update");
+
+    b = new Binding({
+        object: effect_data[1],
+        property: "param2"
+    });
+    b.addBinding($(".fx2_param2")[0], "value");
+    b.setTrigger("update");
+	b.setIdentifier($(".fx2_param2")[0]);
 });
 
 

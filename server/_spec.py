@@ -97,3 +97,12 @@ WS_INPUT_VALID_CONTEXTS=["track", "main", "track-settings", "FXtrack", "monitor"
 
 WS_FUNCTION_TO_TRACK_CC={"pan": MIDI_CC_TRACK_PAN, "eq_lowcut": MIDI_CC_TRACK_EQ_LOWCUT, "eq_low": MIDI_CC_TRACK_EQ_LOW, "eq_mid": MIDI_CC_TRACK_EQ_MID, "eq_mid_frq": MIDI_CC_TRACK_EQ_MID_FRQ, "eq_high": MIDI_CC_TRACK_EQ_HIGH, "eq_off": MIDI_CC_TRACK_EQ_OFF, "phase": MIDI_CC_TRACK_EQ_PHASE}
 WS_FUNCTION_TO_TRACK_CC2={"pan": MIDI_CC_TRACK_PAN2, "eq_lowcut": MIDI_CC_TRACK_EQ_LOWCUT2, "eq_low": MIDI_CC_TRACK_EQ_LOW2, "eq_mid": MIDI_CC_TRACK_EQ_MID2, "eq_mid_frq": MIDI_CC_TRACK_EQ_MID_FRQ2, "eq_high": MIDI_CC_TRACK_EQ_HIGH2, "eq_off": MIDI_CC_TRACK_EQ_OFF2, "phase": MIDI_CC_TRACK_EQ_PHASE2}
+
+
+
+########### NON MIDI ############
+
+FX1_PARAM1_ID=b"\xb4\x4e\x00"
+FX1_PARAM2_ID=b"\xbc\x4e\x00"
+FX2_PARAM1_ID=b"\xb6\x4e\x00"
+FX2_PARAM2_ID=b"\xbe\x4e\x00"

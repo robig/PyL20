@@ -148,3 +148,37 @@ def create_json_message(message):
             context="monitor"
 
     return { "command": { "type": message.type, "channel": chan, "control": message.control, "value": message.value, "function": func, "context": context, "group": group } }
+
+
+def parse_non_midi_message(data:bytearray):
+    # map for client:
+    func = None
+    context= None
+    chan = None
+    type = "byte"
+    print(data[2:5])
+    if len(data)==9 and data[2:5] == FX1_PARAM1_ID:
+        val = data[8]
+        chan = 0
+        func = "param1"
+        context="FX"
+    elif len(data)==9 and data[2:5] == FX1_PARAM2_ID:
+        val = data[8]
+        chan = 0
+        func = "param2"
+        context="FX"
+    elif len(data)==9 and data[2:5] == FX2_PARAM1_ID:
+        val = data[8]
+        chan = 1
+        func = "param1"
+        context="FX"
+    elif len(data)==9 and data[2:5] == FX2_PARAM2_ID:
+        val = data[8]
+        chan = 1
+        func = "param2"
+        context="FX"
+
+    if context and type:
+        return { "command": { "type": type, "channel": chan, "value": val, "function": func, "context": context } }
+    
+    return False

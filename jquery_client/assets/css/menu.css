@@ -38,12 +38,14 @@
 #menu li.channel.active, #menu li.channel:active {
     background-position-x: 100px;
 }
-#menu li.effects {
+#menu li.effect {
     background: url('../img/menu_effects.png');
     width: 94px;
     height: 32px;
 }
-
+#menu li.effect.active, #menu li.effect:active {
+    background-position-x: 100px;
+}
 
 
 .top.overlay {
@@ -198,11 +200,16 @@
 }
 #effect_settings .fx1, #effect_settings .fx2 {
     display: table-cell;
-    width: 40%;
+    width: 370px;
+    height: 200px;
     padding-left: 10px;
-    padding-top:  20px;
+    padding-top:  30px;
+    border-right: solid #7c828e 2px;
 }
-
+#effect_settings .name {
+    font-size: 150%;
+    color: #7c828e;
+}
 #effect_settings select {
     width: 200px;
     display: block;

@@ -346,6 +346,28 @@ def decode_sysex_track_info(sysex_data : bytearray):
             #print("FX",ti, "g=",g," i=", i, " d=", int(d), " offsets", 2*g+i, " offset=",f)
             command["tracks"][ti]["values"].append(int(d))
 
+    # FX effects
+    offset = 61*line_len
+    d=sysex_data[offset]
+    print("EFFECT decode")
+    print_hex_line(sysex_data[offset:offset+9])
+    print_hex_line(sysex_data[offset+9:offset+18])
+    command['effects']=[{"effect": 0}, {"effect":0}];
+    command['effects'][0]["effect"]=int(d)
+    d=sysex_data[offset+1]
+    command['effects'][1]["effect"]=int(d)
+
+    # FX params
+    offset = 61*line_len
+    p1=sysex_data[offset+3]
+    p2=sysex_data[offset+6]
+    command['effects'][0]["param1"]=int(p1)
+    command['effects'][0]["param2"]=int(p2)
+    p1=sysex_data[offset+5]
+    p2=sysex_data[offset+9]
+    command['effects'][1]["param1"]=int(p1)
+    command['effects'][1]["param2"]=int(p2)
+
     # master mute
     offset = 64*line_len + 2
     d=sysex_data[offset]

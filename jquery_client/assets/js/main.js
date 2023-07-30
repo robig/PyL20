@@ -17,9 +17,9 @@ var main_data = {"master": {"value": 0, "mute": 0, "solo": 0}, "monitor": [{"val
 var message_callbacks = [];
 var mouseDown=false;
 var editMode = false;
-var track_selected = {"group": 0, "track": null};
+var track_selected = {"group": 0, "track": 0};
 var fx_track_data = [];
-var effect_data = [];
+var effect_data = [{"effect": 0, "param1":0, "param2":0}, {"effect": 0, "param1":0, "param2":0}];
 var eqKeys = ["eq_off", "phase", "pan", "eq_high", "eq_mid", "eq_mid_frq", "eq_low", "eq_lowcut","efx1","efx2"];
 var unblock_bindings=[];
 
@@ -141,6 +141,13 @@ message_callbacks.push({
 		if(cmd.monitor) {
 			for(var i=0; i<main_data.monitor.length && i<cmd.monitor.length;i++) {
 				main_data.monitor[i].value = cmd.monitor[i];
+			}
+		}
+		if(cmd.effects) {
+			for(var i=0;i<2;i++) {
+				effect_data[i].effect=cmd.effects[i].effect;
+				effect_data[i].param1=cmd.effects[i].param1;
+				effect_data[i].param2=cmd.effects[i].param2;
 			}
 		}
 	}
@@ -273,17 +280,28 @@ message_callbacks.push(
 message_callbacks.push(
 	{ // FX effect selection
 		"filter": function(cmd) {
-			return cmd.context=="FX"; //&& cmd.function == "effect";
+			return cmd.context=="FX" && cmd.function == "effect";
 		},
 		"action": function(cmd) {
 			if(cmd.channel >= 0 && cmd.channel < 2) {
-				effect_data[cmd.channel]={"effect": cmd.value};
-				$("#effect_settings #efx"+cmd.channel+"-select").val(cmd.value);
+				effect_data[cmd.channel]["effect"]=cmd.value;
+				//$("#effect_settings #efx"+cmd.channel+"-select").val(cmd.value);
 			}
 		}
 	}
 );
-
+message_callbacks.push(
+	{ // FX effect parameters
+		"filter": function(cmd) {
+			return cmd.context=="FX" && cmd.function.startsWith("param");
+		},
+		"action": function(cmd) {
+			if(cmd.channel >= 0 && cmd.channel < 2) {
+				effect_data[cmd.channel][cmd.function]=cmd.value;
+			}
+		}
+	}
+);
 
 function onLoad(config) {
 	var monoTrackCount = config.tracks.mono.count;
@@ -324,12 +342,10 @@ function onLoad(config) {
 			var trk = parseInt($(this).attr("x-track"));
 			var isFX = trk>=monoTrackCount+stereoTrackCount;
 			if(isFX) {
-				$("#effect_settings").show();
-				$("#channel_settings").hide();
+				activateMenu("effect");
 				track_selected.fx = trk - monoTrackCount+stereoTrackCount;
 			}else{
-				$("#effect_settings").hide();
-				$("#channel_settings").show();
+				activateMenu("channel");
 			}
 		});
 		track_data[i] = {"number": ""+(i+1), "name": "CH"+(i+1), "color": 0, "value": 0, "channel": i, "mute": 0, "solo": 0, "rec": 0, "groups":[], "eq": {"eq_off":0, "phase": 0, "pan":0, "eq_high":0 ,"eq_mid": 0, "eq_mid_frq":0, "eq_low":0, "eq_lowcut":0, "efx1": 0, "efx2":0 }};
@@ -921,6 +937,20 @@ $(window).keypress(function (e) {
 function resize_track_container() {
 	$("#mixer #track_container").width($("body").width() - 275 );
 }
+
+$("#track_container").bind('mousewheel DOMMouseScroll', function(e) {
+	var ori = e.originalEvent,
+		deltaX = ori.detail || ori.wheelDeltaX;
+
+	if($(e.target).hasClass("slider")) {
+		return;
+	}
+	var scale = 1.9;
+	if(deltaX!=0) {
+		$("#track_container").scrollLeft($("#track_container").scrollLeft()+scale*deltaX);
+	}
+	
+});
 
 $(window).resize(resize_track_container);
 resize_track_container();
